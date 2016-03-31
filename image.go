@@ -9,6 +9,7 @@ import (
 	_ "image/png" // register PNG format
 	_ "image/jpeg"
 	_ "image/gif"
+	"image/color"
 )
 
 func MustReadImage(file string) (image.Image) {
@@ -49,6 +50,30 @@ func Compare(img1, img2 image.Image) (int64, error) {
 
 	return int64(math.Sqrt(float64(accumError))), nil
 }
+
+func ConvertToRGBA(img image.Image) (result *image.RGBA) {
+	result, ok := img.(*image.RGBA)
+	if ok {
+		log.Printf("automatically converted to RGBA")
+		return result
+	} else {
+		log.Printf("must convert manually to RGBA")
+	}
+
+	b := img.Bounds()
+	result = image.NewRGBA(b)
+	for y := b.Min.Y; y < b.Max.Y; y++ {
+		for x := b.Min.X; x < b.Max.X; x++ {
+			r32, g32, b32, a32 := img.At(x, y).RGBA()
+			c := color.RGBA{uint8(r32), uint8(g32), uint8(b32), uint8(a32)}
+			result.SetRGBA(x, y, c)
+		}
+	}
+
+	return
+}
+
+
 
 
 // taken directly from image/color/color.go:

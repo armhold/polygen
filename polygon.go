@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	MutationChance = 0.05
+	MutationChance = 0.15
 	PopulationCount = 10
 	PolygonsPerIndividual = 100
 	MaxPolygonPoints = 6

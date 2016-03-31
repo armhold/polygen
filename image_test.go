@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"image/draw"
+	"reflect"
 )
 
 
@@ -65,3 +66,21 @@ func BenchmarkCompareDiff(b *testing.B) {
 		Compare(img1, img1)
 	}
 }
+
+func TestConvert(t *testing.T) {
+	rect := image.Rect(0, 0, 100, 100)
+
+	rgbImg := image.NewRGBA(rect)
+	result := ConvertToRGBA(rgbImg)
+
+	if reflect.ValueOf(result).Pointer() != reflect.ValueOf(rgbImg).Pointer() {
+		t.Fatalf("expected to get the same pointer back for RGBA image")
+	}
+
+	cmykImg := image.NewCMYK(rect)
+	result = ConvertToRGBA(cmykImg)
+	if reflect.ValueOf(result).Pointer() == reflect.ValueOf(cmykImg).Pointer() {
+		t.Fatalf("expected to get different pointer back for non-RGBA image")
+	}
+}
+
