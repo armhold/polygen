@@ -6,6 +6,7 @@ import (
 	"log"
 	"image"
 	"github.com/llgcode/draw2d/draw2dimg"
+	"fmt"
 )
 
 const (
@@ -21,8 +22,6 @@ const (
 	PolygonsPerIndividual = 100
 	MaxPolygonPoints = 6
 	MinPolygonPoints = 3
-	ImageWidth = 1000
-	ImageHeight = 1000
 )
 
 
@@ -44,14 +43,14 @@ type Polygon struct {
 	color.Color
 }
 
-func RandomPolygon() *Polygon {
+func RandomPolygon(maxW, maxH int) *Polygon {
 	result := &Polygon{}
 	result.Color = color.RGBA{uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff))}
 
 	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints)
 
 	for i := 0; i < numPoints; i++ {
-		result.AddPoint(&Point{rand.Intn(ImageWidth), rand.Intn(ImageHeight)})
+		result.AddPoint(&Point{rand.Intn(maxW), rand.Intn(maxH)})
 	}
 
 	return result
@@ -82,8 +81,8 @@ func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
-func (s *PolygonSet) RenderImage() image.Image {
-	dest := image.NewRGBA(image.Rect(0, 0, ImageWidth, ImageHeight))
+func (s *PolygonSet) RenderImage(w, h int) image.Image {
+	dest := image.NewRGBA(image.Rect(0, 0, w, h))
 	gc := draw2dimg.NewGraphicContext(dest)
 
 	gc.SetLineWidth(1)
@@ -107,8 +106,17 @@ func (s *PolygonSet) RenderImage() image.Image {
 }
 
 
-func (s *PolygonSet) DrawAndSave(destFile string) {
-	img := s.RenderImage()
+func (s *PolygonSet) DrawAndSave(w, h int, destFile string) {
+	img := s.RenderImage(w, h)
 	draw2dimg.SaveToPngFile(destFile, img)
 }
 
+func (s *PolygonSet) String() string {
+	return fmt.Sprintf("fitness: %d", s.Fitness)
+}
+
+
+type ByFitness []*PolygonSet
+func (s ByFitness) Len() int           { return len(s) }
+func (s ByFitness) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
+func (s ByFitness) Less(i, j int) bool { return s[i].Fitness < s[j].Fitness }
