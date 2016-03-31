@@ -14,7 +14,6 @@ var (
 )
 
 func init() {
-
 	flag.IntVar(&maxGen, "maxgen", 10000, "the number of generations")
 	flag.StringVar(&sourceFile, "source", "", "the source input image file")
 	flag.StringVar(&destFile, "dest", "output.png", "the output image file")

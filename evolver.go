@@ -38,7 +38,7 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 		evaluateCandidate(offspring, referenceImg)
 
 		// evict the least fit individual
-		leastFit := population[len(population) - 1]
+		leastFit := population[len(population)-1]
 		if leastFit.Fitness > offspring.Fitness {
 			population[len(population)-1] = offspring
 			log.Printf("evicted, fitness: %d -> %d", leastFit.Fitness, offspring.Fitness)

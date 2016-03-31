@@ -58,7 +58,7 @@ func FastCompare(img1, img2 *image.RGBA) (int64, error) {
 
 	accumError := int64(0)
 
-	for i := 0; i < len(img1.Pix) ; i++ {
+	for i := 0; i < len(img1.Pix); i++ {
 		accumError += int64(sqDiffUInt8(img1.Pix[i], img2.Pix[i]))
 	}
 
