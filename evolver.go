@@ -35,10 +35,16 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 		}
 
 		offspring := population[0].Mate(population[1])
+		evaluateCandidate(offspring, referenceImg)
 
 		// evict the least fit individual
-		population[len(population)-1] = offspring
-
+		leastFit := population[len(population) - 1]
+		if leastFit.Fitness > offspring.Fitness {
+			population[len(population)-1] = offspring
+			log.Printf("evicted, fitness: %d -> %d", leastFit.Fitness, offspring.Fitness)
+		} else {
+			log.Printf("preserved, fitness: %d vs %d", leastFit.Fitness, offspring.Fitness)
+		}
 		population[0].DrawAndSave(destFile)
 	}
 	//log.Printf("population: %+v", population)
@@ -46,12 +52,17 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 
 func evaluatePopulation(population []*Candidate, referenceImg *image.RGBA) {
 	for _, candidate := range population {
-		diff, err := Compare(referenceImg, candidate.img)
-
-		if err != nil {
-			log.Fatalf("error comparing images: %s", err)
-		}
-
-		candidate.Fitness = diff
+		evaluateCandidate(candidate, referenceImg)
 	}
+}
+
+func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
+	diff, err := Compare(referenceImg, c.img)
+	//diff, err := FastCompare(referenceImg, c.img)
+
+	if err != nil {
+		log.Fatalf("error comparing images: %s", err)
+	}
+
+	c.Fitness = diff
 }

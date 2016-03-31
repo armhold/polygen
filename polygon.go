@@ -5,7 +5,7 @@ import (
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
-	"log"
+	_ "log"
 	"math/rand"
 )
 
@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	MutationChance        = 0.15
+	MutationChance        = 0.35
 	PopulationCount       = 10
 	PolygonsPerIndividual = 100
 	MaxPolygonPoints      = 6
@@ -104,19 +104,19 @@ func (p *Polygon) AddPoint(point *Point) {
 func (p *Polygon) Mutate(maxW, maxH int) {
 	switch randomMutation() {
 	case MutationColor:
-		orig := p.Color
+		//orig := p.Color
 		p.Color = MutateColor(p.Color)
-		log.Printf("MutationColor: %v -> %v", orig, p.Color)
+		//log.Printf("MutationColor: %v -> %v", orig, p.Color)
 
 	case MutationPoint:
 		i := rand.Intn(len(p.Points))
 		orig := *p.Points[i]
 		mutated := MutatePoint(orig, maxW, maxH)
 		p.Points[i] = &mutated
-		log.Printf("MutationPoint: %v -> %v", orig, mutated)
+		//log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 	case MutationAddOrDeletePoint:
-		origPointCount := len(p.Points)
+		//origPointCount := len(p.Points)
 
 		if len(p.Points) == MinPolygonPoints {
 			// can't delete
@@ -133,10 +133,8 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 				p.DeleteRandomPoint()
 			}
 		}
-
-		newPointCount := len(p.Points)
-
-		log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
+		//newPointCount := len(p.Points)
+		//log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
 	}
 }
 
@@ -209,7 +207,6 @@ func (cd *Candidate) RenderImage() {
 }
 
 func (cd *Candidate) DrawAndSave(destFile string) {
-	cd.RenderImage()
 	draw2dimg.SaveToPngFile(destFile, cd.img)
 }
 
