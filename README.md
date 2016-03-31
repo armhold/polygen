@@ -1,2 +1,3 @@
 # polygon
-implementing an image efficiently with polygons
+implementing an image efficiently with polygons (golang).
+

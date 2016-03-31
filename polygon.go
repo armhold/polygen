@@ -1,10 +1,12 @@
 package main
 
 import (
-    "image/color"
+	"image/color"
 	"time"
 	"math/rand"
 	"log"
+	"image"
+	"github.com/llgcode/draw2d/draw2dimg"
 )
 
 func init() {
@@ -53,7 +55,9 @@ func Evolve() {
 		population = append(population, individual)
 	}
 
-	log.Printf("population: %+v", population)
+	DrawAndSave(population[0])
+
+	//log.Printf("population: %+v", population)
 }
 
 type Point struct {
@@ -69,7 +73,7 @@ func RandomPolygon() *Polygon {
 	result := &Polygon{}
 	result.Color = color.RGBA{uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff))}
 
-	numPoints := rand.Intn(MaxPolygonPoints)
+	numPoints := randomInt(MinPolygonPoints, MaxPolygonPoints)
 
 	for i := 0; i < numPoints; i++ {
 		result.AddPoint(&Point{rand.Intn(ImageWidth), rand.Intn(ImageHeight)})
@@ -103,12 +107,35 @@ func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
+func DrawAndSave(s PolygonSet) {
+	dest := image.NewRGBA(image.Rect(0, 0, ImageWidth, ImageHeight))
+	gc := draw2dimg.NewGraphicContext(dest)
+
+	gc.SetLineWidth(1)
+
+	for _, polygon := range s {
+		gc.SetStrokeColor(polygon.Color)
+		gc.SetFillColor(polygon.Color)
+
+		firstPoint := polygon.Points[0]
+		gc.MoveTo(float64(firstPoint.X), float64(firstPoint.Y))
+
+		for _, point := range polygon.Points[1:] {
+			gc.LineTo(float64(point.X), float64(point.Y))
+		}
+
+		gc.Close()
+		gc.FillStroke()
+	}
+
+	draw2dimg.SaveToPngFile("output.png", dest)
+}
+
+func randomInt(min, max int) int {
+	return rand.Intn(max - min) + min
+}
+
+
 func main() {
-	p := &Polygon{}
-	p.AddPoint(&Point{10, 20})
-	p.AddPoint(&Point{30, 100})
-
-	p.Mutate()
-
 	Evolve()
 }
