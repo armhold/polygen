@@ -129,8 +129,3 @@ func (s PolygonSet) DrawAndSave() {
 func randomInt(min, max int) int {
 	return rand.Intn(max - min) + min
 }
-
-
-func main() {
-	Evolve()
-}
