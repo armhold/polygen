@@ -4,7 +4,27 @@ import (
 	"image"
 	"fmt"
 	"math"
+	"os"
+	"log"
+	_ "image/png" // register PNG format
+	_ "image/jpeg"
+	_ "image/gif"
 )
+
+func MustReadImage(file string) (image.Image) {
+	infile, err := os.Open(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer infile.Close()
+
+	img, _, err := image.Decode(infile)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return img
+}
 
 func Compare(img1, img2 image.Image) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {

@@ -17,7 +17,6 @@ const (
 
 const (
 	MutationChance = 0.05
-	NumGenerations = 10000
 	PopulationCount = 10
 	PolygonsPerIndividual = 100
 	MaxPolygonPoints = 6
@@ -31,8 +30,10 @@ var (
 	Mutations = []int{MutationColor, MutationPoint, MutationAddPoint, MutationDeletePoint}
 )
 
-type PolygonSet []*Polygon
-
+type PolygonSet struct {
+	Polygons []*Polygon
+	Fitness int64
+}
 
 type Point struct {
 	X, Y int
@@ -81,13 +82,13 @@ func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
-func (s PolygonSet) DrawAndSave(destFile string) {
+func (s *PolygonSet) RenderImage() image.Image {
 	dest := image.NewRGBA(image.Rect(0, 0, ImageWidth, ImageHeight))
 	gc := draw2dimg.NewGraphicContext(dest)
 
 	gc.SetLineWidth(1)
 
-	for _, polygon := range s {
+	for _, polygon := range s.Polygons {
 		gc.SetStrokeColor(polygon.Color)
 		gc.SetFillColor(polygon.Color)
 
@@ -102,6 +103,12 @@ func (s PolygonSet) DrawAndSave(destFile string) {
 		gc.FillStroke()
 	}
 
-	draw2dimg.SaveToPngFile(destFile, dest)
+	return dest
+}
+
+
+func (s *PolygonSet) DrawAndSave(destFile string) {
+	img := s.RenderImage()
+	draw2dimg.SaveToPngFile(destFile, img)
 }
 
