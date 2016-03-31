@@ -49,3 +49,19 @@ func TestCompareDiff(t *testing.T) {
 		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
 	}
 }
+
+func BenchmarkCompareDiff(b *testing.B) {
+	rect := image.Rect(0, 0, 1000, 1000)
+	img1 := image.NewRGBA(rect)
+	img2 := image.NewRGBA(rect)
+
+	blue1 := color.RGBA{0, 0, 255, 255}
+	blue2 := color.RGBA{0, 0, 250, 255}
+
+	draw.Draw(img1, img1.Bounds(), &image.Uniform{blue1}, image.ZP, draw.Src)
+	draw.Draw(img2, img2.Bounds(), &image.Uniform{blue2}, image.ZP, draw.Src)
+
+	for i := 0; i < b.N; i++ {
+		Compare(img1, img1)
+	}
+}

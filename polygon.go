@@ -173,7 +173,7 @@ func MutateColor(c color.Color) color.Color {
 
 	// randomly select one of the r/g/b/a values to mutate
 	i := rand.Intn(4)
-	val := uint8(rand.Intn(255))
+	val := uint8(rand.Intn(256))
 
 	switch i {
 	case 0:
