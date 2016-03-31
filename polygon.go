@@ -12,8 +12,7 @@ import (
 const (
 	MutationColor = iota
 	MutationPoint = iota
-	MutationAddPoint = iota
-	MutationDeletePoint = iota
+	MutationAddOrDeletePoint = iota
 )
 
 const (
@@ -26,7 +25,7 @@ const (
 
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationAddPoint, MutationDeletePoint}
+	Mutations = []int{MutationColor, MutationPoint, MutationAddOrDeletePoint}
 )
 
 type Candidate struct {
@@ -63,11 +62,16 @@ func RandomPolygon(maxW, maxH int) *Polygon {
 	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints)
 
 	for i := 0; i < numPoints; i++ {
-		result.AddPoint(&Point{rand.Intn(maxW), rand.Intn(maxH)})
+		result.AddPoint(RandomPoint(maxW, maxH))
 	}
 
 	return result
 }
+
+func RandomPoint(maxW, maxH int) *Point {
+	return &Point{rand.Intn(maxW), rand.Intn(maxH)}
+}
+
 
 func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	w, h := m1.w, m1.h
@@ -116,14 +120,36 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 		p.Points[i] = &mutated
 		log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
-	case MutationAddPoint:
-		log.Printf("MutationAddPoint")
+	case MutationAddOrDeletePoint:
+		origPointCount := len(p.Points)
 
-	case MutationDeletePoint:
-		log.Printf("MutationDeletePoint")
+		if len(p.Points) == MinPolygonPoints {
+			// can't delete
+			p.AddPoint(RandomPoint(maxW, maxH))
+		} else if len(p.Points) == MaxPolygonPoints {
+			// can't add
+			p.DeleteRandomPoint()
+		} else {
+			// we can do either add or delete
+			switch rand.Intn(2) {
+			case 0:
+				p.AddPoint(RandomPoint(maxW, maxH))
+			case 1:
+				p.DeleteRandomPoint()
+			}
+		}
+
+		newPointCount := len(p.Points)
+
+		log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
 	}
-
 }
+
+func (p *Polygon) DeleteRandomPoint() {
+	i := rand.Intn(len(p.Points))
+	p.Points = append(p.Points[:i], p.Points[i+1:]...)
+}
+
 
 // NB: operates on copy of p
 func MutatePoint(p Point, maxW, maxH int) Point {
