@@ -1,28 +1,27 @@
 package polygen
 
 import (
-	"image/color"
-	"math/rand"
-	"log"
-	"image"
-	"github.com/llgcode/draw2d/draw2dimg"
 	"fmt"
+	"github.com/llgcode/draw2d/draw2dimg"
+	"image"
+	"image/color"
+	"log"
+	"math/rand"
 )
 
 const (
-	MutationColor = iota
-	MutationPoint = iota
+	MutationColor            = iota
+	MutationPoint            = iota
 	MutationAddOrDeletePoint = iota
 )
 
 const (
-	MutationChance = 0.15
-	PopulationCount = 10
+	MutationChance        = 0.15
+	PopulationCount       = 10
 	PolygonsPerIndividual = 100
-	MaxPolygonPoints = 6
-	MinPolygonPoints = 3
+	MaxPolygonPoints      = 6
+	MinPolygonPoints      = 3
 )
-
 
 var (
 	Mutations = []int{MutationColor, MutationPoint, MutationAddOrDeletePoint}
@@ -72,7 +71,6 @@ func RandomPoint(maxW, maxH int) *Point {
 	return &Point{rand.Intn(maxW), rand.Intn(maxH)}
 }
 
-
 func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	w, h := m1.w, m1.h
 	crossover := rand.Intn(len(m1.Polygons))
@@ -82,7 +80,7 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 		var p Polygon
 
 		if i <= crossover {
-			p = *m1.Polygons[i]  // NB copy the polygon, not the pointer
+			p = *m1.Polygons[i] // NB copy the polygon, not the pointer
 		} else {
 			p = *m2.Polygons[i]
 		}
@@ -98,9 +96,6 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	result.RenderImage()
 	return result
 }
-
-
-
 
 func (p *Polygon) AddPoint(point *Point) {
 	p.Points = append(p.Points, point)
@@ -150,7 +145,6 @@ func (p *Polygon) DeleteRandomPoint() {
 	p.Points = append(p.Points[:i], p.Points[i+1:]...)
 }
 
-
 // NB: operates on copy of p
 func MutatePoint(p Point, maxW, maxH int) Point {
 	result := p
@@ -165,7 +159,6 @@ func MutatePoint(p Point, maxW, maxH int) Point {
 
 	return result
 }
-
 
 func MutateColor(c color.Color) color.Color {
 	// get the non-premultiplied rgba values
@@ -189,10 +182,8 @@ func MutateColor(c color.Color) color.Color {
 	return color.RGBAModel.Convert(nrgba)
 }
 
-
-
 func randomMutation() int {
-	return Mutations[rand.Int() % len(Mutations)]
+	return Mutations[rand.Int()%len(Mutations)]
 }
 
 func (cd *Candidate) RenderImage() {
@@ -217,7 +208,6 @@ func (cd *Candidate) RenderImage() {
 	}
 }
 
-
 func (cd *Candidate) DrawAndSave(destFile string) {
 	cd.RenderImage()
 	draw2dimg.SaveToPngFile(destFile, cd.img)
@@ -227,13 +217,12 @@ func (cd *Candidate) String() string {
 	return fmt.Sprintf("fitness: %d", cd.Fitness)
 }
 
-
 func shouldMutate() bool {
 	return rand.Float32() < MutationChance
 }
 
-
 type ByFitness []*Candidate
+
 func (cds ByFitness) Len() int           { return len(cds) }
 func (cds ByFitness) Swap(i, j int)      { cds[i], cds[j] = cds[j], cds[i] }
 func (cds ByFitness) Less(i, j int) bool { return cds[i].Fitness < cds[j].Fitness }

@@ -1,8 +1,8 @@
 package polygen
 
 import (
-	"log"
 	"image"
+	"log"
 	"sort"
 )
 
@@ -12,7 +12,8 @@ type Individual interface {
 }
 
 func Evolve(maxGen int, sourceFile, destFile string) {
-	referenceImg := MustReadImage(sourceFile)
+	referenceImg := ConvertToRGBA(MustReadImage(sourceFile))
+
 	w := referenceImg.Bounds().Dx()
 	h := referenceImg.Bounds().Dy()
 
@@ -36,15 +37,14 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 		offspring := population[0].Mate(population[1])
 
 		// evict the least fit individual
-		population[len(population) - 1] = offspring
+		population[len(population)-1] = offspring
 
 		population[0].DrawAndSave(destFile)
 	}
 	//log.Printf("population: %+v", population)
 }
 
-
-func evaluatePopulation(population []*Candidate, referenceImg image.Image) {
+func evaluatePopulation(population []*Candidate, referenceImg *image.RGBA) {
 	for _, candidate := range population {
 		diff, err := Compare(referenceImg, candidate.img)
 

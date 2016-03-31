@@ -1,18 +1,18 @@
 package polygen
 
 import (
-	"image"
 	"fmt"
+	"image"
+	"image/color"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png" // register PNG format
+	"log"
 	"math"
 	"os"
-	"log"
-	_ "image/png" // register PNG format
-	_ "image/jpeg"
-	_ "image/gif"
-	"image/color"
 )
 
-func MustReadImage(file string) (image.Image) {
+func MustReadImage(file string) image.Image {
 	infile, err := os.Open(file)
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +27,7 @@ func MustReadImage(file string) (image.Image) {
 	return img
 }
 
-func Compare(img1, img2 image.Image) (int64, error) {
+func Compare(img1, img2 *image.RGBA) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
 	}
@@ -72,9 +72,6 @@ func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 
 	return
 }
-
-
-
 
 // taken directly from image/color/color.go:
 //

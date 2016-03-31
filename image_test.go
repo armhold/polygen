@@ -1,18 +1,17 @@
 package polygen
 
 import (
-	"testing"
 	"image"
 	"image/color"
 	"image/draw"
 	"reflect"
+	"testing"
 )
 
-
 func TestCompareBounds(t *testing.T) {
-	img1 := image.Rect(0, 0, 100, 100)
-	img2 := image.Rect(0, 0, 100, 100)
-	img3 := image.Rect(10, 10, 100, 100)
+	img1 := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	img2 := image.NewRGBA(image.Rect(0, 0, 100, 100))
+	img3 := image.NewRGBA(image.Rect(10, 10, 100, 100))
 
 	_, err := Compare(img1, img2)
 	if err != nil {
@@ -83,4 +82,3 @@ func TestConvert(t *testing.T) {
 		t.Fatalf("expected to get different pointer back for non-RGBA image")
 	}
 }
-

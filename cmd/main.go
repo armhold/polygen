@@ -1,18 +1,17 @@
 package main
 
 import (
-	"time"
-	"math/rand"
-	"github.com/armhold/polygen"
 	"flag"
+	"github.com/armhold/polygen"
+	"math/rand"
 	"os"
+	"time"
 )
 
 var (
-	maxGen int
+	maxGen               int
 	sourceFile, destFile string
 )
-
 
 func init() {
 
