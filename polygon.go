@@ -29,9 +29,11 @@ var (
 	Mutations = []int{MutationColor, MutationPoint, MutationAddPoint, MutationDeletePoint}
 )
 
-type PolygonSet struct {
+type Candidate struct {
+	w, h     int
 	Polygons []*Polygon
-	Fitness int64
+	Fitness  int64
+	img      *image.RGBA
 }
 
 type Point struct {
@@ -41,6 +43,17 @@ type Point struct {
 type Polygon struct {
 	Points []*Point
 	color.Color
+}
+
+func RandomCandidate(w, h int) *Candidate {
+	result := &Candidate{w: w, h: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	for j := 0; j < len(result.Polygons); j++ {
+		result.Polygons[j] = RandomPolygon(w, h)
+	}
+
+	result.RenderImage()
+
+	return result
 }
 
 func RandomPolygon(maxW, maxH int) *Polygon {
@@ -56,17 +69,52 @@ func RandomPolygon(maxW, maxH int) *Polygon {
 	return result
 }
 
+func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
+	w, h := m1.w, m1.h
+	crossover := rand.Intn(len(m1.Polygons))
+	polygons := make([]*Polygon, len(m1.Polygons))
+
+	for i := 0; i < len(polygons); i++ {
+		var p Polygon
+
+		if i <= crossover {
+			p = *m1.Polygons[i]  // NB copy the polygon, not the pointer
+		} else {
+			p = *m2.Polygons[i]
+		}
+
+		if shouldMutate() {
+			p.Mutate(w, h)
+		}
+
+		polygons[i] = &p
+	}
+
+	result := &Candidate{w: m1.w, h: m1.h, Polygons: polygons}
+	result.RenderImage()
+	return result
+}
+
+
+
+
 func (p *Polygon) AddPoint(point *Point) {
 	p.Points = append(p.Points, point)
 }
 
-func (p *Polygon) Mutate() {
+func (p *Polygon) Mutate(maxW, maxH int) {
 	switch randomMutation() {
 	case MutationColor:
-		log.Printf("MutationColor")
+		orig := p.Color
+		p.Color = MutateColor(p.Color)
+		log.Printf("MutationColor: %v -> %v", orig, p.Color)
 
 	case MutationPoint:
-		log.Printf("MutationPoint")
+		i := rand.Intn(len(p.Points))
+		orig := *p.Points[i]
+		mutated := MutatePoint(orig, maxW, maxH)
+		p.Points[i] = &mutated
+		log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 	case MutationAddPoint:
 		log.Printf("MutationAddPoint")
@@ -77,17 +125,57 @@ func (p *Polygon) Mutate() {
 
 }
 
+// NB: operates on copy of p
+func MutatePoint(p Point, maxW, maxH int) Point {
+	result := p
+
+	i := rand.Intn(2)
+	switch i {
+	case 0:
+		result.X = rand.Intn(maxW)
+	case 1:
+		result.Y = rand.Intn(maxH)
+	}
+
+	return result
+}
+
+
+func MutateColor(c color.Color) color.Color {
+	// get the non-premultiplied rgba values
+	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
+
+	// randomly select one of the r/g/b/a values to mutate
+	i := rand.Intn(4)
+	val := uint8(rand.Intn(255))
+
+	switch i {
+	case 0:
+		nrgba.R = val
+	case 1:
+		nrgba.G = val
+	case 2:
+		nrgba.B = val
+	case 3:
+		nrgba.A = val
+	}
+
+	return color.RGBAModel.Convert(nrgba)
+}
+
+
+
 func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
-func (s *PolygonSet) RenderImage(w, h int) image.Image {
-	dest := image.NewRGBA(image.Rect(0, 0, w, h))
-	gc := draw2dimg.NewGraphicContext(dest)
+func (cd *Candidate) RenderImage() {
+	cd.img = image.NewRGBA(image.Rect(0, 0, cd.w, cd.h))
+	gc := draw2dimg.NewGraphicContext(cd.img)
 
 	gc.SetLineWidth(1)
 
-	for _, polygon := range s.Polygons {
+	for _, polygon := range cd.Polygons {
 		gc.SetStrokeColor(polygon.Color)
 		gc.SetFillColor(polygon.Color)
 
@@ -101,22 +189,25 @@ func (s *PolygonSet) RenderImage(w, h int) image.Image {
 		gc.Close()
 		gc.FillStroke()
 	}
-
-	return dest
 }
 
 
-func (s *PolygonSet) DrawAndSave(w, h int, destFile string) {
-	img := s.RenderImage(w, h)
-	draw2dimg.SaveToPngFile(destFile, img)
+func (cd *Candidate) DrawAndSave(destFile string) {
+	cd.RenderImage()
+	draw2dimg.SaveToPngFile(destFile, cd.img)
 }
 
-func (s *PolygonSet) String() string {
-	return fmt.Sprintf("fitness: %d", s.Fitness)
+func (cd *Candidate) String() string {
+	return fmt.Sprintf("fitness: %d", cd.Fitness)
 }
 
 
-type ByFitness []*PolygonSet
-func (s ByFitness) Len() int           { return len(s) }
-func (s ByFitness) Swap(i, j int)      { s[i], s[j] = s[j], s[i] }
-func (s ByFitness) Less(i, j int) bool { return s[i].Fitness < s[j].Fitness }
+func shouldMutate() bool {
+	return rand.Float32() < MutationChance
+}
+
+
+type ByFitness []*Candidate
+func (cds ByFitness) Len() int           { return len(cds) }
+func (cds ByFitness) Swap(i, j int)      { cds[i], cds[j] = cds[j], cds[i] }
+func (cds ByFitness) Less(i, j int) bool { return cds[i].Fitness < cds[j].Fitness }

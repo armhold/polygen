@@ -16,46 +16,42 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 	w := referenceImg.Bounds().Dx()
 	h := referenceImg.Bounds().Dy()
 
-	var population []*PolygonSet
+	var population []*Candidate
 
 	for i := 0; i < PopulationCount; i++ {
-		individual := &PolygonSet{}
-		for j := 0; j < PolygonsPerIndividual; j++ {
-			individual.Polygons = append(individual.Polygons, RandomPolygon(w, h))
-		}
-
-		population = append(population, individual)
+		population = append(population, RandomCandidate(w, h))
 	}
-
-	population[0].DrawAndSave(w, h, destFile)
-
 
 	for i := 0; i < maxGen; i++ {
 		log.Printf("generation %d", i)
 
 		evaluatePopulation(population, referenceImg)
-		sort.Sort(ByFitness(population))
 
-		for _, polygonSet := range population {
-			log.Print(polygonSet)
+		// after sort, the 2 best populations will be at [0] and [1], worst will be at [len() - 1]
+		sort.Sort(ByFitness(population))
+		for _, candidate := range population {
+			log.Print(candidate)
 		}
+
+		offspring := population[0].Mate(population[1])
+
+		// evict the least fit individual
+		population[len(population) - 1] = offspring
+
+		population[0].DrawAndSave(destFile)
 	}
 	//log.Printf("population: %+v", population)
 }
 
 
-func evaluatePopulation(population []*PolygonSet, referenceImg image.Image) {
-	w := referenceImg.Bounds().Dx()
-	h := referenceImg.Bounds().Dy()
-
-	for _, polygonSet := range population {
-		img := polygonSet.RenderImage(w, h)
-		diff, err := Compare(referenceImg, img)
+func evaluatePopulation(population []*Candidate, referenceImg image.Image) {
+	for _, candidate := range population {
+		diff, err := Compare(referenceImg, candidate.img)
 
 		if err != nil {
 			log.Fatalf("error comparing images: %s", err)
 		}
 
-		polygonSet.Fitness = diff
+		candidate.Fitness = diff
 	}
 }
