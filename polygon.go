@@ -1,17 +1,12 @@
-package main
+package polygon
 
 import (
 	"image/color"
-	"time"
 	"math/rand"
 	"log"
 	"image"
 	"github.com/llgcode/draw2d/draw2dimg"
 )
-
-func init() {
-	rand.Seed(time.Now().UTC().UnixNano())
-}
 
 const (
 	MutationColor = iota
@@ -55,7 +50,7 @@ func Evolve() {
 		population = append(population, individual)
 	}
 
-	DrawAndSave(population[0])
+	population[0].DrawAndSave()
 
 	//log.Printf("population: %+v", population)
 }
@@ -107,7 +102,7 @@ func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
-func DrawAndSave(s PolygonSet) {
+func (s PolygonSet) DrawAndSave() {
 	dest := image.NewRGBA(image.Rect(0, 0, ImageWidth, ImageHeight))
 	gc := draw2dimg.NewGraphicContext(dest)
 
