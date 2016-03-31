@@ -1,4 +1,4 @@
-package polygon
+package polygen
 
 import (
 	"image/color"
@@ -31,29 +31,8 @@ var (
 	Mutations = []int{MutationColor, MutationPoint, MutationAddPoint, MutationDeletePoint}
 )
 
-type Individual interface {
-	Fitness() int
-	BreedWith(Individual) Individual
-}
-
 type PolygonSet []*Polygon
 
-func Evolve() {
-	var population []PolygonSet
-
-	for i := 0; i < PopulationCount; i++ {
-		var individual PolygonSet
-		for j := 0; j < PolygonsPerIndividual; j++ {
-			individual = append(individual, RandomPolygon())
-		}
-
-		population = append(population, individual)
-	}
-
-	population[0].DrawAndSave()
-
-	//log.Printf("population: %+v", population)
-}
 
 type Point struct {
 	X, Y int
@@ -68,7 +47,7 @@ func RandomPolygon() *Polygon {
 	result := &Polygon{}
 	result.Color = color.RGBA{uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff))}
 
-	numPoints := randomInt(MinPolygonPoints, MaxPolygonPoints)
+	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints)
 
 	for i := 0; i < numPoints; i++ {
 		result.AddPoint(&Point{rand.Intn(ImageWidth), rand.Intn(ImageHeight)})
@@ -102,7 +81,7 @@ func randomMutation() int {
 	return Mutations[rand.Int() % len(Mutations)]
 }
 
-func (s PolygonSet) DrawAndSave() {
+func (s PolygonSet) DrawAndSave(destFile string) {
 	dest := image.NewRGBA(image.Rect(0, 0, ImageWidth, ImageHeight))
 	gc := draw2dimg.NewGraphicContext(dest)
 
@@ -123,9 +102,6 @@ func (s PolygonSet) DrawAndSave() {
 		gc.FillStroke()
 	}
 
-	draw2dimg.SaveToPngFile("output.png", dest)
+	draw2dimg.SaveToPngFile(destFile, dest)
 }
 
-func randomInt(min, max int) int {
-	return rand.Intn(max - min) + min
-}
