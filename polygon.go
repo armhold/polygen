@@ -233,7 +233,8 @@ func (cd *Candidate) RenderImage() {
 		}
 
 		gc.Close()
-		gc.FillStroke()
+		//gc.FillStroke()
+		gc.Fill()
 	}
 }
 
