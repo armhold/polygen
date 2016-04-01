@@ -5,20 +5,20 @@ import (
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
-	"log"
-	_ "log"
 	"math/rand"
+	"log"
 )
 
 const (
 	MutationColor            = iota
 	MutationPoint            = iota
+	MutationZOrder           = iota
 	MutationAddOrDeletePoint = iota
 )
 
 const (
-	MutationChance           = 0.35
-	PopulationCount          = 10
+	MutationChance           = 0.15
+	PopulationCount          = 20
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
@@ -26,7 +26,7 @@ const (
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationAddOrDeletePoint}
+	Mutations = []int{MutationColor, MutationPoint, MutationZOrder, MutationAddOrDeletePoint}
 )
 
 type Candidate struct {
@@ -115,7 +115,14 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 		orig := *p.Points[i]
 		mutated := MutatePoint(orig, maxW, maxH)
 		p.Points[i] = &mutated
-		log.Printf("MutationPoint: %v -> %v", orig, mutated)
+		//log.Printf("MutationPoint: %v -> %v", orig, mutated)
+
+	case MutationZOrder:
+		for i := 0; i < len(p.Points); i++ {
+			j := rand.Intn(i+1)
+			p.Points[i], p.Points[j] = p.Points[j], p.Points[i]
+		}
+		log.Printf("MutationZOrder")
 
 	case MutationAddOrDeletePoint:
 		//origPointCount := len(p.Points)
