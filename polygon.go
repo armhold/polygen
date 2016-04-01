@@ -18,7 +18,7 @@ const (
 const (
 	MutationChance        = 0.35
 	PopulationCount       = 10
-	PolygonsPerIndividual = 100
+	PolygonsPerIndividual = 50
 	MaxPolygonPoints      = 6
 	MinPolygonPoints      = 3
 )
@@ -126,10 +126,9 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 			p.DeleteRandomPoint()
 		} else {
 			// we can do either add or delete
-			switch rand.Intn(2) {
-			case 0:
+			if NextBool() {
 				p.AddPoint(RandomPoint(maxW, maxH))
-			case 1:
+			} else {
 				p.DeleteRandomPoint()
 			}
 		}
@@ -147,11 +146,9 @@ func (p *Polygon) DeleteRandomPoint() {
 func MutatePoint(p Point, maxW, maxH int) Point {
 	result := p
 
-	i := rand.Intn(2)
-	switch i {
-	case 0:
+	if NextBool() {
 		result.X = rand.Intn(maxW)
-	case 1:
+	} else {
 		result.Y = rand.Intn(maxH)
 	}
 
