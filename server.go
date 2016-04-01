@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"strconv"
 	"image/png"
+	"image"
 )
 
 var (
@@ -31,28 +32,39 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func imageHandler(safe *SafeImage) http.HandlerFunc {
+func evolvingImageHandler(safe *SafeImage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		img := safe.Value()
+		serveNonCacheableImage(img, w, r)
+	}
+}
 
-		buffer := new(bytes.Buffer)
-		if err := png.Encode(buffer, img); err != nil {
-			log.Println("unable to encode image.")
-		}
+func refImageHandler(referenceImg image.Image) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		serveNonCacheableImage(referenceImg, w, r)
+	}
+}
 
-		w.Header().Set("Cache-control", "max-age=0, must-revalidate")
-		w.Header().Set("Content-Type", "image/png")
-		w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
-		if _, err := w.Write(buffer.Bytes()); err != nil {
-			log.Println("unable to write image")
-		}
+func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Request) {
+	buffer := new(bytes.Buffer)
+	if err := png.Encode(buffer, img); err != nil {
+		log.Println("unable to encode image.")
+	}
+
+	w.Header().Set("Cache-control", "max-age=0, must-revalidate")
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
+	if _, err := w.Write(buffer.Bytes()); err != nil {
+		log.Println("unable to write image")
 	}
 }
 
 
-func Serve(hostPort string, img *SafeImage) {
+
+func Serve(hostPort string, refImg image.Image, evolvingImg *SafeImage) {
 	http.HandleFunc("/", rootHandler)
-	http.Handle("/image", imageHandler(img))
+	http.Handle("/image", evolvingImageHandler(evolvingImg))
+	http.Handle("/ref", refImageHandler(refImg))
 
 	log.Printf("listening on %s...", hostPort)
 

@@ -11,8 +11,8 @@ type Individual interface {
 	BreedWith(Individual) Individual
 }
 
-func Evolve(maxGen int, sourceFile, destFile string, safeImage *SafeImage) {
-	referenceImg := ConvertToRGBA(MustReadImage(sourceFile))
+func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *SafeImage) {
+	refImgRGBA := ConvertToRGBA(referenceImg)
 
 	w := referenceImg.Bounds().Dx()
 	h := referenceImg.Bounds().Dy()
@@ -26,7 +26,7 @@ func Evolve(maxGen int, sourceFile, destFile string, safeImage *SafeImage) {
 	for i := 0; i < maxGen; i++ {
 		log.Printf("generation %d", i)
 
-		evaluatePopulation(population, referenceImg)
+		evaluatePopulation(population, refImgRGBA)
 
 		// after sort, the 2 best populations will be at [0] and [1], worst will be at [len() - 1]
 		sort.Sort(ByFitness(population))
@@ -35,7 +35,7 @@ func Evolve(maxGen int, sourceFile, destFile string, safeImage *SafeImage) {
 		}
 
 		offspring := population[0].Mate(population[1])
-		evaluateCandidate(offspring, referenceImg)
+		evaluateCandidate(offspring, refImgRGBA)
 
 		// evict the least fit individual
 		leastFit := population[len(population)-1]
