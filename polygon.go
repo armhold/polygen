@@ -5,6 +5,7 @@ import (
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
+	"log"
 	_ "log"
 	"math/rand"
 )
@@ -16,11 +17,12 @@ const (
 )
 
 const (
-	MutationChance        = 0.35
-	PopulationCount       = 10
-	PolygonsPerIndividual = 50
-	MaxPolygonPoints      = 6
-	MinPolygonPoints      = 3
+	MutationChance           = 0.35
+	PopulationCount          = 10
+	PolygonsPerIndividual    = 50
+	MaxPolygonPoints         = 6
+	MinPolygonPoints         = 3
+	PointMutationMaxDistance = 5
 )
 
 var (
@@ -113,7 +115,7 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 		orig := *p.Points[i]
 		mutated := MutatePoint(orig, maxW, maxH)
 		p.Points[i] = &mutated
-		//log.Printf("MutationPoint: %v -> %v", orig, mutated)
+		log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 	case MutationAddOrDeletePoint:
 		//origPointCount := len(p.Points)
@@ -144,13 +146,38 @@ func (p *Polygon) DeleteRandomPoint() {
 
 // NB: operates on copy of p
 func MutatePoint(p Point, maxW, maxH int) Point {
+	// copy it
 	result := p
 
+	xDelta := rand.Intn(PointMutationMaxDistance + 1)
 	if NextBool() {
-		result.X = rand.Intn(maxW)
-	} else {
-		result.Y = rand.Intn(maxH)
+		xDelta = -xDelta
 	}
+
+	x := result.X + xDelta
+	if x < 0 {
+		x = 0
+	}
+
+	if x > maxW {
+		x = maxW - 1
+	}
+	result.X = x
+
+	yDelta := rand.Intn(PointMutationMaxDistance + 1)
+	if NextBool() {
+		yDelta = -yDelta
+	}
+
+	y := result.Y + yDelta
+	if y < 0 {
+		y = 0
+	}
+
+	if y > maxH {
+		y = maxH - 1
+	}
+	result.Y = y
 
 	return result
 }
