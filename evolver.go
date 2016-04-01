@@ -4,6 +4,7 @@ import (
 	"image"
 	"log"
 	"sort"
+	"math/rand"
 )
 
 type Individual interface {
@@ -14,19 +15,19 @@ type Individual interface {
 func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *SafeImage) {
 	refImgRGBA := ConvertToRGBA(referenceImg)
 
-	w := referenceImg.Bounds().Dx()
-	h := referenceImg.Bounds().Dy()
+	w := refImgRGBA.Bounds().Dx()
+	h := refImgRGBA.Bounds().Dy()
 
 	var population []*Candidate
 
 	for i := 0; i < PopulationCount; i++ {
-		population = append(population, RandomCandidate(w, h))
+		c := RandomCandidate(w, h)
+		evaluateCandidate(c, refImgRGBA)
+		population = append(population, c)
 	}
 
 	for i := 0; i < maxGen; i++ {
 		log.Printf("generation %d", i)
-
-		evaluatePopulation(population, refImgRGBA)
 
 		// after sort, the 2 best populations will be at [0] and [1], worst will be at [len() - 1]
 		sort.Sort(ByFitness(population))
@@ -46,15 +47,9 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 			log.Printf("preserved, fitness: %d vs %d", leastFit.Fitness, offspring.Fitness)
 		}
 		population[0].DrawAndSave(destFile)
-		safeImage.Update(population[0].img)
+		safeImage.Update(population[len(population) - 1].img)
 	}
 	//log.Printf("population: %+v", population)
-}
-
-func evaluatePopulation(population []*Candidate, referenceImg *image.RGBA) {
-	for _, candidate := range population {
-		evaluateCandidate(candidate, referenceImg)
-	}
 }
 
 func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
@@ -66,4 +61,11 @@ func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
 	}
 
 	c.Fitness = diff
+}
+
+func shufflePopulation(population []*Candidate) {
+	for i := range population {
+		j := rand.Intn(i + 1)
+		population[i], population[j] = population[j], population[i]
+	}
 }
