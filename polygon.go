@@ -58,9 +58,9 @@ func RandomCandidate(w, h int) *Candidate {
 
 func RandomPolygon(maxW, maxH int) *Polygon {
 	result := &Polygon{}
-	result.Color = color.RGBA{uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff)), uint8(rand.Intn(0xff))}
+	result.Color = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256))}
 
-	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints)
+	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints+1)
 
 	for i := 0; i < numPoints; i++ {
 		result.AddPoint(RandomPoint(maxW, maxH))
@@ -212,7 +212,7 @@ func MutateColor(c color.Color) color.Color {
 }
 
 func randomMutation() int {
-	return Mutations[rand.Int()%len(Mutations)]
+	return Mutations[rand.Intn(len(Mutations))]
 }
 
 func (cd *Candidate) RenderImage() {
