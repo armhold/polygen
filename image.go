@@ -33,9 +33,10 @@ func Compare(img1, img2 *image.RGBA) (int64, error) {
 	}
 
 	accumError := int64(0)
+	bounds := img1.Bounds()
 
-	for x := img1.Bounds().Min.X; x < img1.Bounds().Max.X; x++ {
-		for y := img1.Bounds().Min.Y; y < img1.Bounds().Max.Y; y++ {
+	for x := bounds.Min.X; x < bounds.Max.X; x++ {
+		for y := bounds.Min.Y; y < bounds.Max.Y; y++ {
 			c1 := img1.At(x, y)
 			c2 := img2.At(x, y)
 

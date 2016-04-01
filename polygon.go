@@ -6,7 +6,7 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
-	"log"
+	//"log"
 )
 
 const (
@@ -81,7 +81,7 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	for i := 0; i < len(polygons); i++ {
 		var p Polygon
 
-		if i <= crossover {
+		if i < crossover {
 			p = *m1.Polygons[i] // NB copy the polygon, not the pointer
 		} else {
 			p = *m2.Polygons[i]
@@ -94,7 +94,7 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 		polygons[i] = &p
 	}
 
-	result := &Candidate{w: m1.w, h: m1.h, Polygons: polygons}
+	result := &Candidate{w: w, h: h, Polygons: polygons}
 	result.RenderImage()
 	return result
 }
@@ -122,7 +122,7 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 			j := rand.Intn(i+1)
 			p.Points[i], p.Points[j] = p.Points[j], p.Points[i]
 		}
-		log.Printf("MutationZOrder")
+		//log.Printf("MutationZOrder")
 
 	case MutationAddOrDeletePoint:
 		//origPointCount := len(p.Points)
