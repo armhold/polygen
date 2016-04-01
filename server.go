@@ -31,26 +31,28 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func imageHandler(w http.ResponseWriter, r *http.Request) {
-	img := MustReadImage("images/mona_lisa.jpg")
+func imageHandler(safe *SafeImage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		img := safe.Value()
 
-	buffer := new(bytes.Buffer)
-	if err := png.Encode(buffer, img); err != nil {
-		log.Println("unable to encode image.")
-	}
+		buffer := new(bytes.Buffer)
+		if err := png.Encode(buffer, img); err != nil {
+			log.Println("unable to encode image.")
+		}
 
-	w.Header().Set("Cache-control", "max-age=0, must-revalidate")
-	w.Header().Set("Content-Type", "image/png")
-	w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
-	if _, err := w.Write(buffer.Bytes()); err != nil {
-		log.Println("unable to write image")
+		w.Header().Set("Cache-control", "max-age=0, must-revalidate")
+		w.Header().Set("Content-Type", "image/png")
+		w.Header().Set("Content-Length", strconv.Itoa(len(buffer.Bytes())))
+		if _, err := w.Write(buffer.Bytes()); err != nil {
+			log.Println("unable to write image")
+		}
 	}
 }
 
 
-func Serve(hostPort string) {
+func Serve(hostPort string, img *SafeImage) {
 	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/image", imageHandler)
+	http.Handle("/image", imageHandler(img))
 
 	log.Printf("listening on %s...", hostPort)
 

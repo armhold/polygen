@@ -11,7 +11,7 @@ type Individual interface {
 	BreedWith(Individual) Individual
 }
 
-func Evolve(maxGen int, sourceFile, destFile string) {
+func Evolve(maxGen int, sourceFile, destFile string, safeImage *SafeImage) {
 	referenceImg := ConvertToRGBA(MustReadImage(sourceFile))
 
 	w := referenceImg.Bounds().Dx()
@@ -46,6 +46,7 @@ func Evolve(maxGen int, sourceFile, destFile string) {
 			log.Printf("preserved, fitness: %d vs %d", leastFit.Fitness, offspring.Fitness)
 		}
 		population[0].DrawAndSave(destFile)
+		safeImage.Update(population[0].img)
 	}
 	//log.Printf("population: %+v", population)
 }

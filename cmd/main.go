@@ -39,6 +39,9 @@ func init() {
 }
 
 func main() {
-	go polygen.Serve(host + ":" + port)
-	polygen.Evolve(maxGen, sourceFile, destFile)
+	img := polygen.MustReadImage("images/mona_lisa.jpg")
+	safeImage := &polygen.SafeImage{Image: img}
+
+	go polygen.Serve(host + ":" + port, safeImage)
+	polygen.Evolve(maxGen, sourceFile, destFile, safeImage)
 }
