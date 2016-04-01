@@ -3,7 +3,7 @@ package polygen
 import (
 	"fmt"
 	"image"
-	"image/color"
+	"image/draw"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png" // register PNG format
@@ -65,6 +65,9 @@ func FastCompare(img1, img2 *image.RGBA) (int64, error) {
 	return int64(math.Sqrt(float64(accumError))), nil
 }
 
+// from http://blog.golang.org/go-imagedraw-package ("Converting an Image to RGBA"),
+// modified slightly to be a no-op if the src image is already RGBA
+//
 func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 	result, ok := img.(*image.RGBA)
 	if ok {
@@ -75,14 +78,8 @@ func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 	}
 
 	b := img.Bounds()
-	result = image.NewRGBA(b)
-	for y := b.Min.Y; y < b.Max.Y; y++ {
-		for x := b.Min.X; x < b.Max.X; x++ {
-			r32, g32, b32, a32 := img.At(x, y).RGBA()
-			c := color.RGBA{uint8(r32), uint8(g32), uint8(b32), uint8(a32)}
-			result.SetRGBA(x, y, c)
-		}
-	}
+	result = image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(result, result.Bounds(), img, b.Min, draw.Src)
 
 	return
 }
