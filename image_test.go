@@ -124,3 +124,30 @@ func TestConvert(t *testing.T) {
 		t.Fatalf("expected to get different pointer back for non-RGBA image")
 	}
 }
+
+func TestCompareMonaLisa(t *testing.T) {
+	img1 := ConvertToRGBA(MustReadImage("images/mona_lisa.jpg"))
+	img2 := image.NewRGBA(img1.Bounds())
+	draw.Draw(img2, img1.Bounds(), img1, img1.Bounds().Min, draw.Src)
+
+	diff, err := Compare(img1, img2)
+	if err != nil {
+		t.Fatalf("unexpected err: %s", err)
+	}
+
+	// exact same image
+	expected := int64(0)
+	if diff != expected {
+		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
+	}
+
+	// change a single pixel
+	c := img2.At(50, 50)
+	img2.Set(50, 50, MutateColor(c))
+	diff, err = Compare(img1, img2)
+	expected = int64(9894)
+	if diff != expected {
+		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
+	}
+}
+
