@@ -6,6 +6,8 @@ import (
 	"sort"
 	"math/rand"
 	"time"
+	"image/color"
+	"image/draw"
 )
 
 func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *SafeImage) {
@@ -25,8 +27,6 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 	}
 
 	for i := 0; i < maxGen; i++ {
-		//log.Printf("generation %d", i)
-
 		shufflePopulation(population)
 		parentCount := len(population)
 
@@ -41,25 +41,16 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(population))
-		//for _, candidate := range population {
-		//	log.Print(candidate)
-		//}
 
 		if i % 10 == 0 {
 			printStats(population, i, startTime)
 		}
 
-		//bestChild := population[parentCount]
-
-
 		// evict the least-fit
 		population = population[:PopulationCount]
 
 		mostFit := population[0]
-		//mostFit.DrawAndSave(destFile)
-		//safeImage.Update(mostFit.img)
 		safeImage.Update(mostFit.img)
-
 	}
 
 	mostFit := population[0]
@@ -67,9 +58,32 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, destFile)
 }
 
+
+// for comparison, create a near-perfect copy of the ref image, with only a few pixels changed
+func createNearCopy(refImg image.Image) image.Image {
+	result := image.NewRGBA(refImg.Bounds())
+	b := result.Bounds()
+
+	draw.Draw(result, b, refImg, b.Min, draw.Src)
+
+	for i := 0; i < 5; i++ {
+		result.Set(b.Min.X + i, b.Min.Y, color.Black)
+	}
+
+	return result
+}
+
+
+
 func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
-	//diff, err := Compare(referenceImg, c.img)
-	diff, err := FastCompare(referenceImg, c.img)
+	// for comparison,
+	//almostPerfect := image.NewRGBA(referenceImg.Bounds())
+	//draw.Draw(almostPerfect, almostPerfect.Bounds(), referenceImg, almostPerfect.Bounds().Min, draw.Src)
+	//almostPerfect.Set(50, 50, color.Black)
+	//diff, err := Compare(referenceImg, almostPerfect)
+
+	diff, err := Compare(referenceImg, c.img)
+	//diff, err := FastCompare(referenceImg, c.img)
 
 	if err != nil {
 		log.Fatalf("error comparing images: %s", err)
