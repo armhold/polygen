@@ -5,6 +5,7 @@ import (
 	"log"
 	"sort"
 	"math/rand"
+	"time"
 )
 
 func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *SafeImage) {
@@ -49,16 +50,19 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 		population = population[:PopulationCount]
 
 		mostFit := population[0]
-		mostFit.DrawAndSave(destFile)
+		//mostFit.DrawAndSave(destFile)
 		//safeImage.Update(mostFit.img)
 		safeImage.Update(mostFit.img)
 	}
-	//log.Printf("population: %+v", population)
+
+	mostFit := population[0]
+	mostFit.DrawAndSave(destFile)
+	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, destFile)
 }
 
 func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
-	diff, err := Compare(referenceImg, c.img)
-	//diff, err := FastCompare(referenceImg, c.img)
+	//diff, err := Compare(referenceImg, c.img)
+	diff, err := FastCompare(referenceImg, c.img)
 
 	if err != nil {
 		log.Fatalf("error comparing images: %s", err)
