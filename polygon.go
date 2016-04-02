@@ -98,9 +98,8 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 
 			case MutationPoint:
 				i := rand.Intn(len(p.Points))
-				//orig := *p.Points[i]
-				//mutated := MutatePoint(orig, w, h)
-				p.Points[i] = RandomPoint(w, h)
+				p.Points[i].MutateNearby(w, h)
+				//p.Points[i] = RandomPoint(w, h)
 			//log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 			case MutationZOrder:
@@ -151,17 +150,13 @@ func (p *Polygon) DeleteRandomPoint() {
 	p.Points = append(p.Points[:i], p.Points[i+1:]...)
 }
 
-// NB: operates on copy of p
-func MutatePoint(p Point, maxW, maxH int) Point {
-	// copy it
-	result := p
-
+func (p *Point) MutateNearby(maxW, maxH int) {
 	xDelta := rand.Intn(PointMutationMaxDistance + 1)
 	if NextBool() {
 		xDelta = -xDelta
 	}
 
-	x := result.X + xDelta
+	x := p.X + xDelta
 	if x < 0 {
 		x = 0
 	}
@@ -169,14 +164,14 @@ func MutatePoint(p Point, maxW, maxH int) Point {
 	if x >= maxW {
 		x = maxW - 1
 	}
-	result.X = x
+	p.X = x
 
 	yDelta := rand.Intn(PointMutationMaxDistance + 1)
 	if NextBool() {
 		yDelta = -yDelta
 	}
 
-	y := result.Y + yDelta
+	y := p.Y + yDelta
 	if y < 0 {
 		y = 0
 	}
@@ -184,9 +179,7 @@ func MutatePoint(p Point, maxW, maxH int) Point {
 	if y >= maxH {
 		y = maxH - 1
 	}
-	result.Y = y
-
-	return result
+	p.Y = y
 }
 
 func RandomColor() color.Color {
