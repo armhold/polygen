@@ -85,6 +85,22 @@ func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 	return
 }
 
+func ConvertToNRGBA(img image.Image) (result *image.NRGBA) {
+	result, ok := img.(*image.NRGBA)
+	if ok {
+		//log.Printf("automatically converted to NRGBA")
+		return result
+	} else {
+		//log.Printf("must convert manually to NRGBA")
+	}
+
+	b := img.Bounds()
+	result = image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(result, result.Bounds(), img, b.Min, draw.Src)
+
+	return
+}
+
 // taken directly from image/color/color.go:
 //
 // sqDiff returns the squared-difference of x and y, shifted by 2 so that

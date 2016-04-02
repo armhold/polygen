@@ -16,6 +16,8 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 
 	var population []*Candidate
 
+	startTime := time.Now()
+
 	for i := 0; i < PopulationCount; i++ {
 		c := RandomCandidate(w, h)
 		evaluateCandidate(c, refImgRGBA)
@@ -23,7 +25,7 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 	}
 
 	for i := 0; i < maxGen; i++ {
-		log.Printf("generation %d", i)
+		//log.Printf("generation %d", i)
 
 		shufflePopulation(population)
 		parentCount := len(population)
@@ -39,8 +41,12 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(population))
-		for _, candidate := range population {
-			log.Print(candidate)
+		//for _, candidate := range population {
+		//	log.Print(candidate)
+		//}
+
+		if i % 10 == 0 {
+			printStats(population, i, startTime)
 		}
 
 		//bestChild := population[parentCount]
@@ -53,6 +59,7 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 		//mostFit.DrawAndSave(destFile)
 		//safeImage.Update(mostFit.img)
 		safeImage.Update(mostFit.img)
+
 	}
 
 	mostFit := population[0]
@@ -76,4 +83,12 @@ func shufflePopulation(population []*Candidate) {
 		j := rand.Intn(i + 1)
 		population[i], population[j] = population[j], population[i]
 	}
+}
+
+func printStats(sortedPop []*Candidate, generations int, startTime time.Time) {
+	dur := time.Since(startTime)
+	best := sortedPop[0].Fitness
+	worst := sortedPop[len(sortedPop)-1].Fitness
+
+	log.Printf("dur: %s, generations: %d, best: %d, worst: %d", dur, generations, best, worst)
 }
