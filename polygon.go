@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	MutationChance           = 0.15
+	MutationChance           = 0.45
 	PopulationCount          = 20
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
@@ -26,6 +26,7 @@ const (
 
 var (
 	Mutations = []int{MutationColor, MutationPoint, MutationZOrder, MutationAddOrDeletePoint}
+	//Mutations = []int{MutationPoint, MutationZOrder}
 )
 
 type Candidate struct {
@@ -77,6 +78,7 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	crossover := rand.Intn(len(m1.Polygons))
 	polygons := make([]*Polygon, len(m1.Polygons))
 
+	shouldShufflePolygons := false
 	for i := 0; i < len(polygons); i++ {
 		var p Polygon
 
@@ -87,10 +89,51 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 		}
 
 		if shouldMutate() {
-			p.Mutate(w, h)
+			switch randomMutation() {
+			case MutationColor:
+				//orig := p.Color
+				//p.Color = MutateColor(p.Color)
+				p.Color = RandomColor()
+			//log.Printf("MutationColor: %v -> %v", orig, p.Color)
+
+			case MutationPoint:
+				i := rand.Intn(len(p.Points))
+				//orig := *p.Points[i]
+				//mutated := MutatePoint(orig, w, h)
+				p.Points[i] = RandomPoint(w, h)
+			//log.Printf("MutationPoint: %v -> %v", orig, mutated)
+
+			case MutationZOrder:
+				shouldShufflePolygons = true
+			//log.Printf("MutationZOrder")
+
+			case MutationAddOrDeletePoint:
+				//origPointCount := len(p.Points)
+
+				if len(p.Points) == MinPolygonPoints {
+					// can't delete
+					p.AddPoint(RandomPoint(w, h))
+				} else if len(p.Points) == MaxPolygonPoints {
+					// can't add
+					p.DeleteRandomPoint()
+				} else {
+					// we can do either add or delete
+					if NextBool() {
+						p.AddPoint(RandomPoint(w, h))
+					} else {
+						p.DeleteRandomPoint()
+					}
+				}
+			//newPointCount := len(p.Points)
+			//log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
+			}
 		}
 
 		polygons[i] = &p
+	}
+
+	if shouldShufflePolygons {
+		shufflePolygonZOrder(polygons)
 	}
 
 	result := &Candidate{w: w, h: h, Polygons: polygons}
@@ -102,49 +145,6 @@ func (p *Polygon) AddPoint(point *Point) {
 	p.Points = append(p.Points, point)
 }
 
-func (p *Polygon) Mutate(maxW, maxH int) {
-	switch randomMutation() {
-	case MutationColor:
-		//orig := p.Color
-		//p.Color = MutateColor(p.Color)
-		p.Color = RandomColor()
-		//log.Printf("MutationColor: %v -> %v", orig, p.Color)
-
-	case MutationPoint:
-		i := rand.Intn(len(p.Points))
-		//orig := *p.Points[i]
-		//mutated := MutatePoint(orig, maxW, maxH)
-		p.Points[i] = RandomPoint(maxW, maxH)
-		//log.Printf("MutationPoint: %v -> %v", orig, mutated)
-
-	case MutationZOrder:
-		for i := 0; i < len(p.Points); i++ {
-			j := rand.Intn(i+1)
-			p.Points[i], p.Points[j] = p.Points[j], p.Points[i]
-		}
-		//log.Printf("MutationZOrder")
-
-	case MutationAddOrDeletePoint:
-		//origPointCount := len(p.Points)
-
-		if len(p.Points) == MinPolygonPoints {
-			// can't delete
-			p.AddPoint(RandomPoint(maxW, maxH))
-		} else if len(p.Points) == MaxPolygonPoints {
-			// can't add
-			p.DeleteRandomPoint()
-		} else {
-			// we can do either add or delete
-			if NextBool() {
-				p.AddPoint(RandomPoint(maxW, maxH))
-			} else {
-				p.DeleteRandomPoint()
-			}
-		}
-		//newPointCount := len(p.Points)
-		//log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
-	}
-}
 
 func (p *Polygon) DeleteRandomPoint() {
 	i := rand.Intn(len(p.Points))
@@ -254,6 +254,14 @@ func (cd *Candidate) String() string {
 func shouldMutate() bool {
 	return rand.Float32() < MutationChance
 }
+
+func shufflePolygonZOrder(polygons []*Polygon) {
+	for i := range polygons {
+		j := rand.Intn(i + 1)
+		polygons[i], polygons[j] = polygons[j], polygons[i]
+	}
+}
+
 
 type ByFitness []*Candidate
 
