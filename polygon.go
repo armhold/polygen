@@ -6,7 +6,6 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
-	//"log"
 )
 
 const (
@@ -107,14 +106,15 @@ func (p *Polygon) Mutate(maxW, maxH int) {
 	switch randomMutation() {
 	case MutationColor:
 		//orig := p.Color
-		p.Color = MutateColor(p.Color)
+		//p.Color = MutateColor(p.Color)
+		p.Color = RandomColor()
 		//log.Printf("MutationColor: %v -> %v", orig, p.Color)
 
 	case MutationPoint:
 		i := rand.Intn(len(p.Points))
-		orig := *p.Points[i]
-		mutated := MutatePoint(orig, maxW, maxH)
-		p.Points[i] = &mutated
+		//orig := *p.Points[i]
+		//mutated := MutatePoint(orig, maxW, maxH)
+		p.Points[i] = RandomPoint(maxW, maxH)
 		//log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 	case MutationZOrder:
@@ -166,7 +166,7 @@ func MutatePoint(p Point, maxW, maxH int) Point {
 		x = 0
 	}
 
-	if x > maxW {
+	if x >= maxW {
 		x = maxW - 1
 	}
 	result.X = x
@@ -181,12 +181,17 @@ func MutatePoint(p Point, maxW, maxH int) Point {
 		y = 0
 	}
 
-	if y > maxH {
+	if y >= maxH {
 		y = maxH - 1
 	}
 	result.Y = y
 
 	return result
+}
+
+func RandomColor() color.Color {
+	c := color.NRGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: uint8(rand.Intn(256)) }
+	return color.RGBAModel.Convert(c)
 }
 
 func MutateColor(c color.Color) color.Color {
