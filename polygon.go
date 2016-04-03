@@ -16,7 +16,7 @@ const (
 )
 
 const (
-	MutationChance           = 0.15
+	MutationChance           = 0.25
 	PopulationCount          = 10
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
@@ -91,24 +91,16 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 		if shouldMutate() {
 			switch randomMutation() {
 			case MutationColor:
-				//orig := p.Color
 				p.Color = MutateColor(p.Color)
-//				p.Color = RandomColor()
-			//log.Printf("MutationColor: %v -> %v", orig, p.Color)
 
 			case MutationPoint:
 				i := rand.Intn(len(p.Points))
 				p.Points[i].MutateNearby(w, h)
-				//p.Points[i] = RandomPoint(w, h)
-			//log.Printf("MutationPoint: %v -> %v", orig, mutated)
 
 			case MutationZOrder:
 				shouldShufflePolygons = true
-			//log.Printf("MutationZOrder")
 
 			case MutationAddOrDeletePoint:
-				//origPointCount := len(p.Points)
-
 				if len(p.Points) == MinPolygonPoints {
 					// can't delete
 					p.AddPoint(RandomPoint(w, h))
@@ -123,8 +115,6 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 						p.DeleteRandomPoint()
 					}
 				}
-			//newPointCount := len(p.Points)
-			//log.Printf("MutationAddOrDeletePoint: %d -> %d points", origPointCount, newPointCount)
 			}
 		}
 
@@ -217,6 +207,7 @@ func (cd *Candidate) RenderImage() {
 	cd.img = image.NewRGBA(image.Rect(0, 0, cd.w, cd.h))
 	gc := draw2dimg.NewGraphicContext(cd.img)
 
+	// paint the whole thing black to start
 	gc.SetFillColor(color.Black)
 	gc.MoveTo(0, 0)
 	gc.LineTo(float64(cd.w), 0)
