@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationZOrder, MutationAddOrDeletePoint, MutationAlpha}
+	Mutations = []int{MutationColor, MutationPoint, MutationAlpha}
 )
 
 
@@ -145,54 +145,33 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 }
 
 func (c *Candidate) MutatedCopy() *Candidate {
-	result := &Candidate{w: c.w, h: c.h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
-	polygons := result.Polygons
+	polygons := make([]*Polygon, PolygonsPerIndividual)
+	result := &Candidate{w: c.w, h: c.h, Polygons: polygons}
 
 	for i := 0; i < len(result.Polygons); i++ {
-		p := *c.Polygons[i]  // copy
+		var p Polygon
+		p = *c.Polygons[i]  // copy
 		polygons[i] = &p
 	}
-
-	shouldShufflePolygons := false
 
 	// make 3 mutations
 	for i := 0; i < 3 ; i++ {
 		locus := rand.Intn(len(polygons))
-		p := polygons[locus]
+		pgon := polygons[locus]
 		switch randomMutation() {
 		case MutationColor:
-			p.Color = MutateColor(p.Color)
+			pgon.Color = MutateColor(pgon.Color)
 
 		case MutationAlpha:
-			p.Color = MutateAlpha(p.Color)
+			pgon.Color = MutateAlpha(pgon.Color)
 
 		case MutationPoint:
-			i := rand.Intn(len(p.Points))
-			p.Points[i].MutateNearby(c.w, c.h)
+			pi := rand.Intn(len(pgon.Points))
+			pgon.Points[pi].MutateNearby(c.w, c.h)
 
-		case MutationZOrder:
-			shouldShufflePolygons = true
-
-		case MutationAddOrDeletePoint:
-			if len(p.Points) == MinPolygonPoints {
-				// can't delete
-				p.AddPoint(RandomPoint(c.w, c.h))
-			} else if len(p.Points) == MaxPolygonPoints {
-				// can't add
-				p.DeleteRandomPoint()
-			} else {
-				// we can do either add or delete
-				if NextBool() {
-					p.AddPoint(RandomPoint(c.w, c.h))
-				} else {
-					p.DeleteRandomPoint()
-				}
-			}
+		default:
+			log.Fatal("fell through")
 		}
-	}
-
-	if shouldShufflePolygons {
-		shufflePolygonZOrder(polygons)
 	}
 
 	result.RenderImage()
