@@ -21,15 +21,15 @@ func init() {
 
 
 type Page struct {
-	 // nothing here yet
+	 ImageCount int
 }
 
-
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	p := &Page{}
-	if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
-		log.Println(err)
+func rootHandler(safeImages []*SafeImage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		p := &Page{ImageCount: len(safeImages)}
+		if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
+			log.Println(err)
+		}
 	}
 }
 
@@ -87,7 +87,7 @@ func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Requ
 
 
 func Serve(hostPort string, refImg image.Image, evolvingImages []*SafeImage) {
-	http.HandleFunc("/", rootHandler)
+	http.Handle("/", rootHandler(evolvingImages))
 	http.Handle("/image/", evolvingImageHandler(evolvingImages))
 	http.Handle("/ref", refImageHandler(refImg))
 
