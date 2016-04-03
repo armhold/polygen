@@ -10,6 +10,7 @@ import (
 	"log"
 	"math"
 	"os"
+	"image/color"
 )
 
 func MustReadImage(file string) image.Image {
@@ -125,4 +126,25 @@ func sqDiffUInt8(x, y uint8) uint8 {
 		d = y - x
 	}
 	return (d * d)
+}
+
+// for comparison, create a near-perfect copy of the ref image, with only a few pixels changed
+func createNearCopy(refImg image.Image) image.Image {
+	result := image.NewRGBA(refImg.Bounds())
+	b := result.Bounds()
+
+	draw.Draw(result, b, refImg, b.Min, draw.Src)
+
+	for i := 0; i < 5; i++ {
+		result.Set(b.Min.X + i, b.Min.Y, color.Black)
+	}
+
+	return result
+}
+
+// draw half of the refImg onto the destImg
+func drawHalf(destImg *image.RGBA, refImg image.Image) {
+	b := destImg.Bounds()
+	half := image.Rect(b.Min.X, b.Min.Y, b.Max.X, b.Max.Y/2)
+	draw.Draw(destImg, half, refImg, b.Min, draw.Src)
 }

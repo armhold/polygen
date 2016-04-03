@@ -6,8 +6,6 @@ import (
 	"sort"
 	"math/rand"
 	"time"
-	"image/color"
-	"image/draw"
 )
 
 func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImages []*SafeImage) {
@@ -70,22 +68,6 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImages []
 	mostFit.DrawAndSave(destFile)
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, destFile)
 }
-
-
-// for comparison, create a near-perfect copy of the ref image, with only a few pixels changed
-func createNearCopy(refImg image.Image) image.Image {
-	result := image.NewRGBA(refImg.Bounds())
-	b := result.Bounds()
-
-	draw.Draw(result, b, refImg, b.Min, draw.Src)
-
-	for i := 0; i < 5; i++ {
-		result.Set(b.Min.X + i, b.Min.Y, color.Black)
-	}
-
-	return result
-}
-
 
 
 func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
