@@ -47,8 +47,8 @@ type Polygon struct {
 
 func RandomCandidate(w, h int) *Candidate {
 	result := &Candidate{w: w, h: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
-	for j := 0; j < len(result.Polygons); j++ {
-		result.Polygons[j] = RandomPolygon(w, h)
+	for i := 0; i < len(result.Polygons); i++ {
+		result.Polygons[i] = RandomPolygon(w, h)
 	}
 
 	result.RenderImage()
