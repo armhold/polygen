@@ -6,9 +6,11 @@ import (
 	"image"
 	"image/color"
 	"math/rand"
+	"log"
 )
 
 const (
+	MutationAlpha            = iota
 	MutationColor            = iota
 	MutationPoint            = iota
 	MutationZOrder           = iota
@@ -25,9 +27,18 @@ const (
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationZOrder/*, MutationAddOrDeletePoint*/}
-	//Mutations = []int{MutationPoint, MutationZOrder}
+	Mutations = []int{MutationColor, MutationPoint, MutationZOrder, MutationAddOrDeletePoint, MutationAlpha}
 )
+
+
+func init() {
+	log.Printf("MutationAlpha: %d", MutationAlpha)
+	log.Printf("MutationColor: %d", MutationColor)
+	log.Printf("MutationPoint: %d", MutationPoint)
+	log.Printf("MutationZOrder: %d", MutationZOrder)
+	log.Printf("MutationAddOrDeletePoint: %d", MutationAddOrDeletePoint)
+}
+
 
 type Candidate struct {
 	w, h     int
@@ -93,6 +104,9 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 			case MutationColor:
 				p.Color = MutateColor(p.Color)
 
+			case MutationAlpha:
+				p.Color = MutateAlpha(p.Color)
+
 			case MutationPoint:
 				i := rand.Intn(len(p.Points))
 				p.Points[i].MutateNearby(w, h)
@@ -127,6 +141,62 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 
 	result := &Candidate{w: w, h: h, Polygons: polygons}
 	result.RenderImage()
+	return result
+}
+
+func (c *Candidate) MutatedCopy() *Candidate {
+	result := &Candidate{w: c.w, h: c.h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	polygons := result.Polygons
+
+	for i := 0; i < len(result.Polygons); i++ {
+		p := *c.Polygons[i]  // copy
+		polygons[i] = &p
+	}
+
+	shouldShufflePolygons := false
+
+	// make 3 mutations
+	for i := 0; i < 3 ; i++ {
+		locus := rand.Intn(len(polygons))
+		p := polygons[locus]
+		switch randomMutation() {
+		case MutationColor:
+			p.Color = MutateColor(p.Color)
+
+		case MutationAlpha:
+			p.Color = MutateAlpha(p.Color)
+
+		case MutationPoint:
+			i := rand.Intn(len(p.Points))
+			p.Points[i].MutateNearby(c.w, c.h)
+
+		case MutationZOrder:
+			shouldShufflePolygons = true
+
+		case MutationAddOrDeletePoint:
+			if len(p.Points) == MinPolygonPoints {
+				// can't delete
+				p.AddPoint(RandomPoint(c.w, c.h))
+			} else if len(p.Points) == MaxPolygonPoints {
+				// can't add
+				p.DeleteRandomPoint()
+			} else {
+				// we can do either add or delete
+				if NextBool() {
+					p.AddPoint(RandomPoint(c.w, c.h))
+				} else {
+					p.DeleteRandomPoint()
+				}
+			}
+		}
+	}
+
+	if shouldShufflePolygons {
+		shufflePolygonZOrder(polygons)
+	}
+
+	result.RenderImage()
+
 	return result
 }
 
@@ -195,6 +265,14 @@ func MutateColor(c color.Color) color.Color {
 	case 3:
 		nrgba.A = val
 	}
+
+	return color.RGBAModel.Convert(nrgba)
+}
+
+func MutateAlpha(c color.Color) color.Color {
+	// get the non-premultiplied rgba values
+	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
+	nrgba.A = uint8(rand.Intn(256))
 
 	return color.RGBAModel.Convert(nrgba)
 }
