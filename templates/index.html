@@ -17,19 +17,53 @@
 
 
 <img id="ref_image" src="/ref">
-<img id="image" src="/image">
+
+<table>
+
+    <tr>
+        <td><img class="evolving_img" src="/image/0#"></td>
+        <td><img class="evolving_img" src="/image/1#"></td>
+        <td><img class="evolving_img" src="/image/2#"></td>
+        <td><img class="evolving_img" src="/image/3#"></td>
+        <td><img class="evolving_img" src="/image/4#"></td>
+    </tr>
+
+
+    <tr>
+        <td><img class="evolving_img" src="/image/5#"></td>
+        <td><img class="evolving_img" src="/image/6#"></td>
+        <td><img class="evolving_img" src="/image/7#"></td>
+        <td><img class="evolving_img" src="/image/8#"></td>
+        <td><img class="evolving_img" src="/image/9#"></td>
+    </tr>
+
+    <tr>
+        <td><img class="evolving_img" src="/image/10#"></td>
+        <td><img class="evolving_img" src="/image/11#"></td>
+        <td><img class="evolving_img" src="/image/12#"></td>
+        <td><img class="evolving_img" src="/image/13#"></td>
+        <td><img class="evolving_img" src="/image/14#"></td>
+    </tr>
+
+</table>
+
 
 
 <script type="application/javascript">
-
     function doPoll(){
-        $('#image').attr('src','/image#' + new Date().getTime());
+        var d = new Date().getTime();
+
+        $('img[class="evolving_img"]').each(function(index,item){
+            var src = $(item).attr('src');
+            src = src.replace(/#.*$/gi, "#" + d);
+            $(item).attr('src', src);
+        });
+
         setTimeout(doPoll, 1000);
         console.log("updated image...")
     }
 
     doPoll();
-
 </script>
 </body>
 </html>

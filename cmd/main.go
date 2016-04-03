@@ -40,8 +40,17 @@ func init() {
 
 func main() {
 	referenceImg := polygen.MustReadImage("images/mona_lisa.jpg")
-	safeImage := &polygen.SafeImage{Image: referenceImg}
 
-	go polygen.Serve(host + ":" + port, referenceImg, safeImage)
-	polygen.Evolve(maxGen, referenceImg, destFile, safeImage)
+	var safeImages []*polygen.SafeImage
+
+	// plus half for the offspring
+	totalImages := polygen.PopulationCount + polygen.PopulationCount / 2
+
+	for i := 0; i < totalImages; i++ {
+		img := &polygen.SafeImage{Image: referenceImg}
+		safeImages = append(safeImages, img)
+	}
+
+	go polygen.Serve(host + ":" + port, referenceImg, safeImages)
+	polygen.Evolve(maxGen, referenceImg, destFile, safeImages)
 }

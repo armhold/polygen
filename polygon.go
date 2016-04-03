@@ -16,8 +16,8 @@ const (
 )
 
 const (
-	MutationChance           = 0.45
-	PopulationCount          = 20
+	MutationChance           = 0.15
+	PopulationCount          = 10
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
@@ -25,7 +25,7 @@ const (
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationZOrder, MutationAddOrDeletePoint}
+	Mutations = []int{MutationColor, MutationPoint, MutationZOrder/*, MutationAddOrDeletePoint*/}
 	//Mutations = []int{MutationPoint, MutationZOrder}
 )
 
@@ -92,8 +92,8 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 			switch randomMutation() {
 			case MutationColor:
 				//orig := p.Color
-				//p.Color = MutateColor(p.Color)
-				p.Color = RandomColor()
+				p.Color = MutateColor(p.Color)
+//				p.Color = RandomColor()
 			//log.Printf("MutationColor: %v -> %v", orig, p.Color)
 
 			case MutationPoint:
@@ -216,6 +216,14 @@ func randomMutation() int {
 func (cd *Candidate) RenderImage() {
 	cd.img = image.NewRGBA(image.Rect(0, 0, cd.w, cd.h))
 	gc := draw2dimg.NewGraphicContext(cd.img)
+
+	gc.SetFillColor(color.Black)
+	gc.MoveTo(0, 0)
+	gc.LineTo(float64(cd.w), 0)
+	gc.LineTo(float64(cd.w), float64(cd.h))
+	gc.LineTo(0, float64(cd.h))
+	gc.Close()
+	gc.Fill()
 
 	gc.SetLineWidth(1)
 

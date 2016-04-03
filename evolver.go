@@ -10,7 +10,7 @@ import (
 	"image/draw"
 )
 
-func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *SafeImage) {
+func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImages []*SafeImage) {
 	refImgRGBA := ConvertToRGBA(referenceImg)
 
 	w := refImgRGBA.Bounds().Dx()
@@ -25,6 +25,9 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 		evaluateCandidate(c, refImgRGBA)
 		population = append(population, c)
 	}
+
+	generationsSinceChange := 0
+	mostFit := population[0]
 
 	for i := 0; i < maxGen; i++ {
 		shufflePopulation(population)
@@ -43,17 +46,27 @@ func Evolve(maxGen int, referenceImg image.Image, destFile string, safeImage *Sa
 		sort.Sort(ByFitness(population))
 
 		if i % 10 == 0 {
-			printStats(population, i, startTime)
+			printStats(population, i, generationsSinceChange, startTime)
 		}
 
-		// evict the least-fit
+//		log.Printf("pop count: %d", len(population))
+		for i := 0; i < len(safeImages); i++ {
+			safeImages[i].Update(population[i].img)
+		}
+
+		// evict the least-fit individuals
 		population = population[:PopulationCount]
 
-		mostFit := population[0]
-		safeImage.Update(mostFit.img)
+		prev := mostFit
+		mostFit = population[0]
+
+		if mostFit.Fitness < prev.Fitness {
+			generationsSinceChange = 0
+		} else {
+			generationsSinceChange++
+		}
 	}
 
-	mostFit := population[0]
 	mostFit.DrawAndSave(destFile)
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, destFile)
 }
@@ -82,8 +95,8 @@ func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
 	//almostPerfect.Set(50, 50, color.Black)
 	//diff, err := Compare(referenceImg, almostPerfect)
 
-	diff, err := Compare(referenceImg, c.img)
-	//diff, err := FastCompare(referenceImg, c.img)
+//	diff, err := Compare(referenceImg, c.img)
+	diff, err := FastCompare(referenceImg, c.img)
 
 	if err != nil {
 		log.Fatalf("error comparing images: %s", err)
@@ -99,10 +112,10 @@ func shufflePopulation(population []*Candidate) {
 	}
 }
 
-func printStats(sortedPop []*Candidate, generations int, startTime time.Time) {
+func printStats(sortedPop []*Candidate, generations, generationsSinceChange int, startTime time.Time) {
 	dur := time.Since(startTime)
 	best := sortedPop[0].Fitness
 	worst := sortedPop[len(sortedPop)-1].Fitness
 
-	log.Printf("dur: %s, generations: %d, best: %d, worst: %d", dur, generations, best, worst)
+	log.Printf("dur: %s, gen: %d, since change: %d, best: %d, worst: %d", dur, generations, generationsSinceChange, best, worst)
 }

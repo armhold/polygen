@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"image/png"
 	"image"
+	"strings"
 )
 
 var (
@@ -32,9 +33,33 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func evolvingImageHandler(safe *SafeImage) http.HandlerFunc {
+func evolvingImageHandler(safeImages []*SafeImage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		img := safe.Value()
+		p := SplitPath(r.URL.Path)
+
+		if len(p) != 2 {
+			err := "missing image argument"
+			log.Print(err)
+			http.Error(w, err, http.StatusBadRequest)
+			return
+		}
+
+		imageNum, err := strconv.Atoi(p[1])
+		if err != nil {
+			err := "bad image argument"
+			log.Print(err)
+			http.Error(w, err, http.StatusBadRequest)
+			return
+		}
+
+		if imageNum >= len(safeImages) {
+			err := "bad image argument"
+			log.Print(err)
+			http.Error(w, err, http.StatusBadRequest)
+			return
+		}
+
+		img := safeImages[imageNum].Value()
 		serveNonCacheableImage(img, w, r)
 	}
 }
@@ -61,9 +86,9 @@ func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Requ
 
 
 
-func Serve(hostPort string, refImg image.Image, evolvingImg *SafeImage) {
+func Serve(hostPort string, refImg image.Image, evolvingImages []*SafeImage) {
 	http.HandleFunc("/", rootHandler)
-	http.Handle("/image", evolvingImageHandler(evolvingImg))
+	http.Handle("/image/", evolvingImageHandler(evolvingImages))
 	http.Handle("/ref", refImageHandler(refImg))
 
 	log.Printf("listening on %s...", hostPort)
@@ -72,4 +97,12 @@ func Serve(hostPort string, refImg image.Image, evolvingImg *SafeImage) {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func SplitPath(path string) []string {
+	trimmed := strings.TrimFunc(path, func(r rune) bool {
+		return r == '/'
+	})
+
+	return strings.Split(trimmed, "/")
 }
