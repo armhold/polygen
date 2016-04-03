@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"time"
+	"image"
 )
 
 var (
@@ -44,13 +45,14 @@ func main() {
 	var safeImages []*polygen.SafeImage
 
 	// plus half for the offspring
-	totalImages := polygen.PopulationCount + polygen.PopulationCount / 2
+	totalImages := polygen.PopulationCount
 
 	for i := 0; i < totalImages; i++ {
-		img := &polygen.SafeImage{Image: referenceImg}
+		img := &polygen.SafeImage{Image: image.Rect(0, 10, 10, 10)}
 		safeImages = append(safeImages, img)
 	}
 
 	go polygen.Serve(host + ":" + port, referenceImg, safeImages)
-	polygen.Evolve(maxGen, referenceImg, destFile, safeImages)
+	//polygen.Evolve(maxGen, referenceImg, destFile, safeImages)
+	polygen.SimulateAnnealing(maxGen, referenceImg, destFile, safeImages)
 }
