@@ -12,6 +12,7 @@ import (
 
 var (
 	maxGen int
+	polyCount int
 	srcImgFile string
 	dstImgFile string
 	host, port string
@@ -21,6 +22,7 @@ var (
 
 func init() {
 	flag.IntVar(&maxGen, "max", 100000, "the number of generations")
+	flag.IntVar(&polyCount, "poly", 50, "the number of polygons")
 	flag.StringVar(&srcImgFile, "source", "", "the source input image file")
 	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
 	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
@@ -69,5 +71,5 @@ func main() {
 		}
 	}
 
-	evolver.Run(maxGen, previews)
+	evolver.Run(maxGen, polyCount, previews)
 }

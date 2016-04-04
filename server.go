@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"image"
 	"strings"
+	"fmt"
 )
 
 var (
@@ -19,21 +20,22 @@ func init() {
 	templates = template.Must(template.ParseGlob("templates/*.html"))
 }
 
-
 type Page struct {
-	 ImageCount int
+	// TODO
 }
 
-func rootHandler(safeImages []*SafeImage) http.HandlerFunc {
+func rootHandler(previewCount int) http.HandlerFunc {
+	// TODO: use previewCount in template so we don't have to hard-code 10 img tags
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		p := &Page{ImageCount: len(safeImages)}
+		p := &Page{}
 		if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func evolvingImageHandler(safeImages []*SafeImage) http.HandlerFunc {
+func imageHandler(previews []*SafeImage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		p := SplitPath(r.URL.Path)
 
@@ -52,14 +54,14 @@ func evolvingImageHandler(safeImages []*SafeImage) http.HandlerFunc {
 			return
 		}
 
-		if imageNum >= len(safeImages) {
+		if imageNum >= len(previews) {
 			err := "bad image argument"
 			log.Print(err)
 			http.Error(w, err, http.StatusBadRequest)
 			return
 		}
 
-		img := safeImages[imageNum].Value()
+		img := previews[imageNum].Value()
 		serveNonCacheableImage(img, w, r)
 	}
 }
@@ -73,7 +75,10 @@ func refImageHandler(referenceImg image.Image) http.HandlerFunc {
 func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Request) {
 	buffer := new(bytes.Buffer)
 	if err := png.Encode(buffer, img); err != nil {
-		log.Println("unable to encode image.")
+		s := fmt.Sprintf("unable to encode image: %s", err)
+		log.Print(s)
+		http.Error(w, s, http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Cache-control", "max-age=0, must-revalidate")
@@ -84,11 +89,9 @@ func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Requ
 	}
 }
 
-
-
-func Serve(hostPort string, refImg image.Image, evolvingImages []*SafeImage) {
-	http.Handle("/", rootHandler(evolvingImages))
-	http.Handle("/image/", evolvingImageHandler(evolvingImages))
+func Serve(hostPort string, refImg image.Image, previews []*SafeImage) {
+	http.Handle("/", rootHandler(len(previews)))
+	http.Handle("/image/", imageHandler(previews))
 	http.Handle("/ref", refImageHandler(refImg))
 
 	log.Printf("listening on %s...", hostPort)

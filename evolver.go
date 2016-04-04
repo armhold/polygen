@@ -78,7 +78,7 @@ func (e *Evolver) saveCheckpoint() error {
 	return nil
 }
 
-func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
+func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
@@ -87,7 +87,7 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 		mostFit = e.candidates[0]
 	} else {
 		e.candidates = make([]*Candidate, PopulationCount)
-		mostFit = RandomCandidate(w, h)
+		mostFit = RandomCandidate(w, h, polyCount)
 		e.candidates[0] = mostFit
 	}
 

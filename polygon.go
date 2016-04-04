@@ -21,7 +21,6 @@ const (
 const (
 	MutationChance           = 0.25
 	PopulationCount          = 10
-	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
 	PointMutationMaxDistance = 100
@@ -63,10 +62,10 @@ func (p* Polygon) Copy() *Polygon {
 	return result
 }
 
-func RandomCandidate(w, h int) *Candidate {
-	result := &Candidate{W: w, H: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
-	for i := 0; i < len(result.Polygons); i++ {
-		result.Polygons[i] = RandomPolygon(w, h)
+func RandomCandidate(w, h, polyCount int) *Candidate {
+	result := &Candidate{W: w, H: h}
+	for i := 0; i < polyCount; i++ {
+		result.Polygons = append(result.Polygons, RandomPolygon(w, h))
 	}
 
 	result.RenderImage()
@@ -93,9 +92,9 @@ func RandomPoint(maxW, maxH int) Point {
 
 // does not copy image- we assume the copy will be mutated after
 func (c *Candidate) CopyOf() *Candidate {
-	result := &Candidate{W: c.W, H: c.H, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	result := &Candidate{W: c.W, H: c.H}
 	for i := 0; i < len(c.Polygons); i++ {
-		result.Polygons[i] = c.Polygons[i].Copy()
+		result.Polygons = append(result.Polygons, c.Polygons[i].Copy())
   	}
 
 	return result
