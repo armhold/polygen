@@ -145,7 +145,7 @@ func TestCompareMonaLisa(t *testing.T) {
 	c := img2.At(50, 50)
 	img2.Set(50, 50, MutateColor(c))
 	diff, err = Compare(img1, img2)
-	expected = int64(9894)
+	expected = int64(5397)
 	if diff != expected {
 		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
 	}

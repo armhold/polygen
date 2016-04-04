@@ -33,12 +33,6 @@ var (
 
 
 func init() {
-	log.Printf("MutationAlpha: %d", MutationAlpha)
-	log.Printf("MutationColor: %d", MutationColor)
-	log.Printf("MutationPoint: %d", MutationPoint)
-	log.Printf("MutationZOrder: %d", MutationZOrder)
-	log.Printf("MutationAddOrDeletePoint: %d", MutationAddOrDeletePoint)
-
 	// need to give an example of a concrete type for the color.Color interface
 	gob.Register(RandomColor())
 }
