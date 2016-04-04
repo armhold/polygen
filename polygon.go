@@ -56,6 +56,17 @@ type Polygon struct {
 	color.Color
 }
 
+func (p* Polygon) Copy() *Polygon {
+	result := &Polygon{Color: p.Color}
+	result.Points = make([]*Point, len(p.Points))
+	for i := 0; i < len(p.Points); i++ {
+		point := &Point{X: p.Points[i].X, Y: p.Points[i].Y}
+		result.Points[i] = point
+	}
+
+	return result
+}
+
 func RandomCandidate(w, h int) *Candidate {
 	result := &Candidate{w: w, h: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
 	for i := 0; i < len(result.Polygons); i++ {
@@ -148,8 +159,7 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 func (c *Candidate) CopyOf() *Candidate {
 	result := &Candidate{w: c.w, h: c.h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
 	for i := 0; i < len(c.Polygons); i++ {
-		p := *c.Polygons[i]  // make a copy, since they will be mutated
-		result.Polygons[i] = &p
+		result.Polygons[i] = c.Polygons[i].Copy()
   	}
 
 	return result

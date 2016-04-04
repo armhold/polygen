@@ -26,7 +26,6 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 	generationsSinceChange := 0
 
 	for gen := 0; gen < maxGen; gen++ {
-
 		c := make(chan *Candidate, PopulationCount)
 		var wg sync.WaitGroup
 
@@ -40,7 +39,8 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 		wg.Add(PopulationCount - 1)
 
 		for i := 1; i < PopulationCount; i++ {
-			go processCandidate(mostFit.CopyOf())
+			copy := mostFit.CopyOf()
+			go processCandidate(copy)
 		}
 
 		wg.Wait()
