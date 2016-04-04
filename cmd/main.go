@@ -46,7 +46,7 @@ func init() {
 }
 
 func main() {
-	refImg := polygen.MustReadImage("images/mona_lisa.jpg")
+	refImg := polygen.MustReadImage(srcImgFile)
 
 	// a set of thread-safe images that can be updated by the evolver, and displayed via the web
 	var previews []*polygen.SafeImage

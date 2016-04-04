@@ -140,10 +140,17 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 			generationsSinceChange++
 		}
 
-		if gen % 500 == 0 && e.checkpoint != "" {
-			err := e.saveCheckpoint()
+		if gen % 500 == 0  {
+			err := mostFit.DrawAndSave(e.dstImgFile)
 			if err != nil {
-				log.Fatalf("error saving checkpoint file: %s", err)
+				log.Fatalf("error saving output image: %s", err)
+			}
+
+			if e.checkpoint != "" {
+				err = e.saveCheckpoint()
+				if err != nil {
+					log.Fatalf("error saving checkpoint file: %s", err)
+				}
 			}
 		}
 	}

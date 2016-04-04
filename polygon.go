@@ -24,7 +24,7 @@ const (
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
-	PointMutationMaxDistance = 100
+	PointMutationMaxDistance = 5
 )
 
 var (
@@ -264,8 +264,9 @@ func (cd *Candidate) RenderImage() {
 	}
 }
 
-func (cd *Candidate) DrawAndSave(destFile string) {
-	draw2dimg.SaveToPngFile(destFile, cd.img)
+func (cd *Candidate) DrawAndSave(destFile string) error {
+	log.Printf("saving output image to: %s", destFile)
+	return draw2dimg.SaveToPngFile(destFile, cd.img)
 }
 
 func (cd *Candidate) String() string {
