@@ -1,13 +1,13 @@
 package polygen
 
 import (
+	"encoding/gob"
 	"fmt"
 	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
-	"math/rand"
 	"log"
-	"encoding/gob"
+	"math/rand"
 )
 
 const (
@@ -30,12 +30,10 @@ var (
 	Mutations = []int{MutationColor, MutationPoint, MutationAlpha, MutationZOrder, MutationAddOrDeletePoint}
 )
 
-
 func init() {
 	// need to give an example of a concrete type for the color.Color interface
 	gob.Register(RandomColor())
 }
-
 
 type Candidate struct {
 	W, H     int
@@ -53,7 +51,7 @@ type Polygon struct {
 	color.Color
 }
 
-func (p* Polygon) Copy() *Polygon {
+func (p *Polygon) Copy() *Polygon {
 	result := &Polygon{Color: p.Color}
 	for i := 0; i < len(p.Points); i++ {
 		result.Points = append(result.Points, p.Points[i])
@@ -95,7 +93,7 @@ func (c *Candidate) CopyOf() *Candidate {
 	result := &Candidate{W: c.W, H: c.H}
 	for i := 0; i < len(c.Polygons); i++ {
 		result.Polygons = append(result.Polygons, c.Polygons[i].Copy())
-  	}
+	}
 
 	return result
 }
@@ -104,7 +102,7 @@ func (c *Candidate) MutateInPlace() {
 	shouldShufflePolygons := false
 
 	// make 3 mutations
-	for i := 0; i < 3 ; i++ {
+	for i := 0; i < 3; i++ {
 		locus := rand.Intn(len(c.Polygons))
 		pgon := c.Polygons[locus]
 		switch randomMutation() {
@@ -137,7 +135,6 @@ func (c *Candidate) MutateInPlace() {
 				}
 			}
 
-
 		default:
 			log.Fatal("fell through")
 		}
@@ -153,7 +150,6 @@ func (c *Candidate) MutateInPlace() {
 func (p *Polygon) AddPoint(point Point) {
 	p.Points = append(p.Points, point)
 }
-
 
 func (p *Polygon) DeleteRandomPoint() {
 	i := rand.Intn(len(p.Points))
@@ -193,7 +189,7 @@ func (p *Point) MutateNearby(maxW, maxH int) {
 }
 
 func RandomColor() color.Color {
-	c := color.NRGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: uint8(rand.Intn(256)) }
+	c := color.NRGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: uint8(rand.Intn(256))}
 	return color.RGBAModel.Convert(c)
 }
 
@@ -281,7 +277,6 @@ func shufflePolygonZOrder(polygons []*Polygon) {
 		polygons[i], polygons[j] = polygons[j], polygons[i]
 	}
 }
-
 
 type ByFitness []*Candidate
 

@@ -1,16 +1,16 @@
 package polygen
 
 import (
-	"image"
-	"log"
-	"sort"
-	"math/rand"
-	"time"
-	"sync"
-	"io/ioutil"
-	"fmt"
-	"encoding/gob"
 	"bytes"
+	"encoding/gob"
+	"fmt"
+	"image"
+	"io/ioutil"
+	"log"
+	"math/rand"
+	"sort"
+	"sync"
+	"time"
 )
 
 type Evolver struct {
@@ -20,7 +20,6 @@ type Evolver struct {
 	checkpoint string
 	candidates []*Candidate
 }
-
 
 func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
 	result := &Evolver{
@@ -32,7 +31,6 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 
 	return result
 }
-
 
 func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
 	b, err := ioutil.ReadFile(checkpoint)
@@ -117,13 +115,13 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		wg.Wait()
 
 		for i := 1; i < PopulationCount; i++ {
-			e.candidates[i] = <- c
+			e.candidates[i] = <-c
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
 
-		if gen % 10 == 0 {
+		if gen%10 == 0 {
 			printStats(e.candidates, gen, generationsSinceChange, startTime)
 		}
 
@@ -140,7 +138,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			generationsSinceChange++
 		}
 
-		if gen % 500 == 0 && e.checkpoint != "" {
+		if gen%500 == 0 && e.checkpoint != "" {
 			err := e.saveCheckpoint()
 			if err != nil {
 				log.Fatalf("error saving checkpoint file: %s", err)
@@ -152,9 +150,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, e.dstImgFile)
 }
 
-
 func (e *Evolver) evaluateCandidate(c *Candidate) {
-//	diff, err := Compare(e.refImgRGBA, c.img)
+	//	diff, err := Compare(e.refImgRGBA, c.img)
 	diff, err := FastCompare(e.refImgRGBA, c.img)
 
 	if err != nil {

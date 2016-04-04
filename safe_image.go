@@ -8,7 +8,7 @@ import (
 // SafeImage is an image protected by a RWMutex. All access should be via the Update() and Value() methods.
 type SafeImage struct {
 	Image image.Image
-	mux sync.RWMutex
+	mux   sync.RWMutex
 }
 
 func (s *SafeImage) Update(img image.Image) {

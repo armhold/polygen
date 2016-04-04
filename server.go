@@ -1,15 +1,15 @@
 package polygen
 
 import (
+	"bytes"
+	"fmt"
+	"html/template"
+	"image"
+	"image/png"
 	"log"
 	"net/http"
-	"html/template"
-	"bytes"
 	"strconv"
-	"image/png"
-	"image"
 	"strings"
-	"fmt"
 )
 
 var (
@@ -29,7 +29,7 @@ func rootHandler(previewCount int) http.HandlerFunc {
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		p := &Page{}
-		if err := templates.ExecuteTemplate(w, "index.html", p) ; err != nil {
+		if err := templates.ExecuteTemplate(w, "index.html", p); err != nil {
 			log.Println(err)
 		}
 	}

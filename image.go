@@ -3,6 +3,7 @@ package polygen
 import (
 	"fmt"
 	"image"
+	"image/color"
 	"image/draw"
 	_ "image/gif"
 	_ "image/jpeg"
@@ -10,7 +11,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"image/color"
 )
 
 func MustReadImage(file string) image.Image {
@@ -131,7 +131,7 @@ func createNearCopy(refImg image.Image) image.Image {
 	draw.Draw(result, b, refImg, b.Min, draw.Src)
 
 	for i := 0; i < 5; i++ {
-		result.Set(b.Min.X + i, b.Min.Y, color.Black)
+		result.Set(b.Min.X+i, b.Min.Y, color.Black)
 	}
 
 	return result

@@ -5,7 +5,7 @@ import (
 )
 
 func TestRandomInt(t *testing.T) {
-	for i := 0 ; i < 1000; i++ {
+	for i := 0; i < 1000; i++ {
 		d := RandomInt(1, 4)
 
 		if d < 1 || d > 3 {
