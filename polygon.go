@@ -24,11 +24,11 @@ const (
 	PolygonsPerIndividual    = 50
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
-	PointMutationMaxDistance = 5
+	PointMutationMaxDistance = 100
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationAlpha, MutationZOrder}
+	Mutations = []int{MutationColor, MutationPoint, MutationAlpha, MutationZOrder, MutationAddOrDeletePoint}
 )
 
 
@@ -91,66 +91,6 @@ func RandomPoint(maxW, maxH int) Point {
 	return Point{rand.Intn(maxW), rand.Intn(maxH)}
 }
 
-func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
-	w, h := m1.W, m1.H
-	crossover := rand.Intn(len(m1.Polygons))
-	polygons := make([]*Polygon, len(m1.Polygons))
-
-	shouldShufflePolygons := false
-	for i := 0; i < len(polygons); i++ {
-		var p Polygon
-
-		if i < crossover {
-			p = *m1.Polygons[i] // NB copy the polygon, not the pointer
-		} else {
-			p = *m2.Polygons[i]
-		}
-
-		if shouldMutate() {
-			switch randomMutation() {
-			case MutationColor:
-				p.Color = MutateColor(p.Color)
-
-			case MutationAlpha:
-				p.Color = MutateAlpha(p.Color)
-
-			case MutationPoint:
-				i := rand.Intn(len(p.Points))
-				p.Points[i].MutateNearby(w, h)
-
-			case MutationZOrder:
-				shouldShufflePolygons = true
-
-			case MutationAddOrDeletePoint:
-				if len(p.Points) == MinPolygonPoints {
-					// can't delete
-					p.AddPoint(RandomPoint(w, h))
-				} else if len(p.Points) == MaxPolygonPoints {
-					// can't add
-					p.DeleteRandomPoint()
-				} else {
-					// we can do either add or delete
-					if NextBool() {
-						p.AddPoint(RandomPoint(w, h))
-					} else {
-						p.DeleteRandomPoint()
-					}
-				}
-			}
-		}
-
-		polygons[i] = &p
-	}
-
-	if shouldShufflePolygons {
-		shufflePolygonZOrder(polygons)
-	}
-
-	result := &Candidate{W: w, H: h, Polygons: polygons}
-	result.RenderImage()
-	return result
-}
-
 // does not copy image- we assume the copy will be mutated after
 func (c *Candidate) CopyOf() *Candidate {
 	result := &Candidate{W: c.W, H: c.H, Polygons: make([]*Polygon, PolygonsPerIndividual)}
@@ -181,6 +121,23 @@ func (c *Candidate) MutateInPlace() {
 
 		case MutationZOrder:
 			shouldShufflePolygons = true
+
+		case MutationAddOrDeletePoint:
+			if len(pgon.Points) == MinPolygonPoints {
+				// can't delete
+				pgon.AddPoint(RandomPoint(c.W, c.H))
+			} else if len(pgon.Points) == MaxPolygonPoints {
+				// can't add
+				pgon.DeleteRandomPoint()
+			} else {
+				// we can do either add or delete
+				if NextBool() {
+					pgon.AddPoint(RandomPoint(c.W, c.H))
+				} else {
+					pgon.DeleteRandomPoint()
+				}
+			}
+
 
 		default:
 			log.Fatal("fell through")
