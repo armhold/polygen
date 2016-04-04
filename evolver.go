@@ -6,6 +6,7 @@ import (
 	"sort"
 	"math/rand"
 	"time"
+	"sync"
 )
 
 func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, safeImages []*SafeImage) {
@@ -24,14 +25,28 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 
 	generationsSinceChange := 0
 
-
 	for gen := 0; gen < maxGen; gen++ {
 
+		c := make(chan *Candidate, PopulationCount)
+		var wg sync.WaitGroup
+
+		processCandidate := func(cand *Candidate) {
+			cand.MutateInPlace()
+			evaluateCandidate(cand, refImgRGBA)
+			c <- cand
+			wg.Done()
+		}
+
+		wg.Add(PopulationCount - 1)
+
 		for i := 1; i < PopulationCount; i++ {
-			copy := mostFit.CopyOf()
-			copy.MutateInPlace()
-			evaluateCandidate(copy, refImgRGBA)
-			candidates[i] = copy
+			go processCandidate(mostFit.CopyOf())
+		}
+
+		wg.Wait()
+
+		for i := 1; i < PopulationCount; i++ {
+			candidates[i] = <- c
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
@@ -45,11 +60,11 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 			safeImages[i].Update(candidates[i].img)
 		}
 
-		prev := mostFit
-		mostFit = candidates[0]
+		currBest := candidates[0]
 
-		if mostFit.Fitness < prev.Fitness {
+		if currBest.Fitness < mostFit.Fitness {
 			generationsSinceChange = 0
+			mostFit = currBest
 		} else {
 			generationsSinceChange++
 		}
