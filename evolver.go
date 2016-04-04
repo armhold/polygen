@@ -31,7 +31,7 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 	return result
 }
 
-func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
+func (e *Evolver) RestoreSavedCandidate(checkpoint string) error {
 	b, err := ioutil.ReadFile(checkpoint)
 	if err != nil {
 		return fmt.Errorf("error reading candidates file: %s", err)
@@ -39,47 +39,47 @@ func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
 
 	decoder := gob.NewDecoder(bytes.NewBuffer(b))
 
-	var candidates []*Candidate
-	err = decoder.Decode(&candidates)
+	var candidate Candidate
+	err = decoder.Decode(&candidate)
 	if err != nil {
-		return fmt.Errorf("error decoding candidates: %s", err)
+		return fmt.Errorf("error decoding candidate: %s", err)
 	}
 
-	e.candidates = candidates
-
-	// TODO: could parallelize this, but probably not worth the code
-	for _, c := range e.candidates {
-		c.RenderImage()
-		e.evaluateCandidate(c)
-	}
+	candidate.RenderImage()
+	e.evaluateCandidate(&candidate)
+	e.candidates = []*Candidate{ &candidate }
 
 	return nil
 }
 
 func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing candidates to %s...", e.checkpoint)
+	log.Printf("checkpointing candidate to %s...", e.checkpoint)
 
 	buf := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buf)
 
-	err := encoder.Encode(e.candidates)
+	err := encoder.Encode(e.candidates[0])
 	if err != nil {
-		return fmt.Errorf("error encoding candidates: %s", err)
+		return fmt.Errorf("error encoding candidate: %s", err)
 	}
 
 	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("error writing candidates to file: %s", err)
+		return fmt.Errorf("error writing candidate to file: %s", err)
 	}
 
 	return nil
 }
 
+
+// Run creates a
 func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
 	var mostFit *Candidate
+
+	// we already have a candidate from prev call to RestoreSavedCandidate()
 	if len(e.candidates) > 0 {
 		mostFit = e.candidates[0]
 	} else {
