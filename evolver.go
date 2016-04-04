@@ -7,22 +7,93 @@ import (
 	"math/rand"
 	"time"
 	"sync"
+	"io/ioutil"
+	"fmt"
+	"encoding/gob"
+	"bytes"
 )
 
-func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, safeImages []*SafeImage) {
-	refImgRGBA := ConvertToRGBA(referenceImg)
+type Evolver struct {
+	refImgRGBA *image.RGBA
+	dstImgFile string
+	previews   []*SafeImage
+	checkpoint string
+	candidates []*Candidate
+}
 
-	w := refImgRGBA.Bounds().Dx()
-	h := refImgRGBA.Bounds().Dy()
 
-	mostFit := RandomCandidate(w, h)
-	evaluateCandidate(mostFit, refImgRGBA)
+func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
+	result := &Evolver{
+		dstImgFile: dstImageFile,
+		checkpoint: checkpoint,
+	}
 
-	candidates := make([]*Candidate, PopulationCount)
-	candidates[0] = mostFit
+	result.refImgRGBA = ConvertToRGBA(refImg)
+
+	return result
+}
+
+
+func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
+	b, err := ioutil.ReadFile(checkpoint)
+	if err != nil {
+		return fmt.Errorf("error reading candidates file: %s", err)
+	}
+
+	decoder := gob.NewDecoder(bytes.NewBuffer(b))
+
+	var candidates []*Candidate
+	err = decoder.Decode(&candidates)
+	if err != nil {
+		return fmt.Errorf("error decoding candidates: %s", err)
+	}
+
+	e.candidates = candidates
+
+	// TODO: could parallelize this, but probably not worth the code
+	for _, c := range e.candidates {
+		c.RenderImage()
+		e.evaluateCandidate(c)
+	}
+
+	return nil
+}
+
+func (e *Evolver) saveCheckpoint() error {
+	log.Printf("checkpointing candidates to %s...", e.checkpoint)
+
+	buf := new(bytes.Buffer)
+	encoder := gob.NewEncoder(buf)
+
+	err := encoder.Encode(e.candidates)
+	if err != nil {
+		return fmt.Errorf("error encoding candidates: %s", err)
+	}
+
+	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
+	if err != nil {
+		return fmt.Errorf("error writing candidates to file: %s", err)
+	}
+
+	return nil
+}
+
+func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
+	w := e.refImgRGBA.Bounds().Dx()
+	h := e.refImgRGBA.Bounds().Dy()
+
+	var mostFit *Candidate
+	if len(e.candidates) > 0 {
+		mostFit = e.candidates[0]
+	} else {
+		e.candidates = make([]*Candidate, PopulationCount)
+		mostFit = RandomCandidate(w, h)
+		e.candidates[0] = mostFit
+	}
+
+	e.evaluateCandidate(mostFit)
 
 	startTime := time.Now()
-
 	generationsSinceChange := 0
 
 	for gen := 0; gen < maxGen; gen++ {
@@ -31,7 +102,7 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 
 		processCandidate := func(cand *Candidate) {
 			cand.MutateInPlace()
-			evaluateCandidate(cand, refImgRGBA)
+			e.evaluateCandidate(cand)
 			c <- cand
 			wg.Done()
 		}
@@ -46,21 +117,21 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 		wg.Wait()
 
 		for i := 1; i < PopulationCount; i++ {
-			candidates[i] = <- c
+			e.candidates[i] = <- c
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
-		sort.Sort(ByFitness(candidates))
+		sort.Sort(ByFitness(e.candidates))
 
 		if gen % 10 == 0 {
-			printStats(candidates, gen, generationsSinceChange, startTime)
+			printStats(e.candidates, gen, generationsSinceChange, startTime)
 		}
 
-		for i := 0; i < len(safeImages); i++ {
-			safeImages[i].Update(candidates[i].img)
+		for i := 0; i < len(previews); i++ {
+			previews[i].Update(e.candidates[i].img)
 		}
 
-		currBest := candidates[0]
+		currBest := e.candidates[0]
 
 		if currBest.Fitness < mostFit.Fitness {
 			generationsSinceChange = 0
@@ -68,16 +139,23 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 		} else {
 			generationsSinceChange++
 		}
+
+		if gen % 500 == 0 {
+			err := e.saveCheckpoint()
+			if err != nil {
+				log.Fatalf("error saving checkpoint file: %s", err)
+			}
+		}
 	}
 
-	mostFit.DrawAndSave(destFile)
-	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, destFile)
+	mostFit.DrawAndSave(e.dstImgFile)
+	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, e.dstImgFile)
 }
 
 
-func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
-//	diff, err := Compare(referenceImg, c.img)
-	diff, err := FastCompare(referenceImg, c.img)
+func (e *Evolver) evaluateCandidate(c *Candidate) {
+//	diff, err := Compare(e.refImgRGBA, c.img)
+	diff, err := FastCompare(e.refImgRGBA, c.img)
 
 	if err != nil {
 		log.Fatalf("error comparing images: %s", err)

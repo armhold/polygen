@@ -7,6 +7,7 @@ import (
 	"image/color"
 	"math/rand"
 	"log"
+	"encoding/gob"
 )
 
 const (
@@ -27,7 +28,7 @@ const (
 )
 
 var (
-	Mutations = []int{MutationColor, MutationPoint, MutationAlpha}
+	Mutations = []int{MutationColor, MutationPoint, MutationAlpha, MutationZOrder}
 )
 
 
@@ -37,11 +38,14 @@ func init() {
 	log.Printf("MutationPoint: %d", MutationPoint)
 	log.Printf("MutationZOrder: %d", MutationZOrder)
 	log.Printf("MutationAddOrDeletePoint: %d", MutationAddOrDeletePoint)
+
+	// need to give an example of a concrete type for the color.Color interface
+	gob.Register(RandomColor())
 }
 
 
 type Candidate struct {
-	w, h     int
+	W, H     int
 	Polygons []*Polygon
 	Fitness  int64
 	img      *image.RGBA
@@ -52,23 +56,21 @@ type Point struct {
 }
 
 type Polygon struct {
-	Points []*Point
+	Points []Point
 	color.Color
 }
 
 func (p* Polygon) Copy() *Polygon {
 	result := &Polygon{Color: p.Color}
-	result.Points = make([]*Point, len(p.Points))
 	for i := 0; i < len(p.Points); i++ {
-		point := &Point{X: p.Points[i].X, Y: p.Points[i].Y}
-		result.Points[i] = point
+		result.Points = append(result.Points, p.Points[i])
 	}
 
 	return result
 }
 
 func RandomCandidate(w, h int) *Candidate {
-	result := &Candidate{w: w, h: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	result := &Candidate{W: w, H: h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
 	for i := 0; i < len(result.Polygons); i++ {
 		result.Polygons[i] = RandomPolygon(w, h)
 	}
@@ -91,12 +93,12 @@ func RandomPolygon(maxW, maxH int) *Polygon {
 	return result
 }
 
-func RandomPoint(maxW, maxH int) *Point {
-	return &Point{rand.Intn(maxW), rand.Intn(maxH)}
+func RandomPoint(maxW, maxH int) Point {
+	return Point{rand.Intn(maxW), rand.Intn(maxH)}
 }
 
 func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
-	w, h := m1.w, m1.h
+	w, h := m1.W, m1.H
 	crossover := rand.Intn(len(m1.Polygons))
 	polygons := make([]*Polygon, len(m1.Polygons))
 
@@ -150,14 +152,14 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 		shufflePolygonZOrder(polygons)
 	}
 
-	result := &Candidate{w: w, h: h, Polygons: polygons}
+	result := &Candidate{W: w, H: h, Polygons: polygons}
 	result.RenderImage()
 	return result
 }
 
 // does not copy image- we assume the copy will be mutated after
 func (c *Candidate) CopyOf() *Candidate {
-	result := &Candidate{w: c.w, h: c.h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	result := &Candidate{W: c.W, H: c.H, Polygons: make([]*Polygon, PolygonsPerIndividual)}
 	for i := 0; i < len(c.Polygons); i++ {
 		result.Polygons[i] = c.Polygons[i].Copy()
   	}
@@ -166,6 +168,8 @@ func (c *Candidate) CopyOf() *Candidate {
 }
 
 func (c *Candidate) MutateInPlace() {
+	shouldShufflePolygons := false
+
 	// make 3 mutations
 	for i := 0; i < 3 ; i++ {
 		locus := rand.Intn(len(c.Polygons))
@@ -179,17 +183,24 @@ func (c *Candidate) MutateInPlace() {
 
 		case MutationPoint:
 			pi := rand.Intn(len(pgon.Points))
-			pgon.Points[pi].MutateNearby(c.w, c.h)
+			pgon.Points[pi].MutateNearby(c.W, c.H)
+
+		case MutationZOrder:
+			shouldShufflePolygons = true
 
 		default:
 			log.Fatal("fell through")
 		}
 	}
 
+	if shouldShufflePolygons {
+		shufflePolygonZOrder(c.Polygons)
+	}
+
 	c.RenderImage()
 }
 
-func (p *Polygon) AddPoint(point *Point) {
+func (p *Polygon) AddPoint(point Point) {
 	p.Points = append(p.Points, point)
 }
 
@@ -271,15 +282,15 @@ func randomMutation() int {
 }
 
 func (cd *Candidate) RenderImage() {
-	cd.img = image.NewRGBA(image.Rect(0, 0, cd.w, cd.h))
+	cd.img = image.NewRGBA(image.Rect(0, 0, cd.W, cd.H))
 	gc := draw2dimg.NewGraphicContext(cd.img)
 
 	// paint the whole thing black to start
 	gc.SetFillColor(color.Black)
 	gc.MoveTo(0, 0)
-	gc.LineTo(float64(cd.w), 0)
-	gc.LineTo(float64(cd.w), float64(cd.h))
-	gc.LineTo(0, float64(cd.h))
+	gc.LineTo(float64(cd.W), 0)
+	gc.LineTo(float64(cd.W), float64(cd.H))
+	gc.LineTo(0, float64(cd.H))
 	gc.Close()
 	gc.Fill()
 
