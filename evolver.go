@@ -24,11 +24,14 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 
 	generationsSinceChange := 0
 
+
 	for gen := 0; gen < maxGen; gen++ {
+
 		for i := 1; i < PopulationCount; i++ {
-			c := mostFit.MutatedCopy()
-			evaluateCandidate(c, refImgRGBA)
-			candidates[i] = c
+			copy := mostFit.CopyOf()
+			copy.MutateInPlace()
+			evaluateCandidate(copy, refImgRGBA)
+			candidates[i] = copy
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
@@ -58,12 +61,6 @@ func SimulateAnnealing(maxGen int, referenceImg image.Image, destFile string, sa
 
 
 func evaluateCandidate(c *Candidate, referenceImg *image.RGBA) {
-	// for comparison,
-	//almostPerfect := image.NewRGBA(referenceImg.Bounds())
-	//draw.Draw(almostPerfect, almostPerfect.Bounds(), referenceImg, almostPerfect.Bounds().Min, draw.Src)
-	//almostPerfect.Set(50, 50, color.Black)
-	//diff, err := Compare(referenceImg, almostPerfect)
-
 //	diff, err := Compare(referenceImg, c.img)
 	diff, err := FastCompare(referenceImg, c.img)
 

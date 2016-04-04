@@ -144,20 +144,22 @@ func (m1 *Candidate) Mate(m2 *Candidate) *Candidate {
 	return result
 }
 
-func (c *Candidate) MutatedCopy() *Candidate {
-	polygons := make([]*Polygon, PolygonsPerIndividual)
-	result := &Candidate{w: c.w, h: c.h, Polygons: polygons}
+// does not copy image- we assume the copy will be mutated after
+func (c *Candidate) CopyOf() *Candidate {
+	result := &Candidate{w: c.w, h: c.h, Polygons: make([]*Polygon, PolygonsPerIndividual)}
+	for i := 0; i < len(c.Polygons); i++ {
+		p := *c.Polygons[i]  // make a copy, since they will be mutated
+		result.Polygons[i] = &p
+  	}
 
-	for i := 0; i < len(result.Polygons); i++ {
-		var p Polygon
-		p = *c.Polygons[i]  // copy
-		polygons[i] = &p
-	}
+	return result
+}
 
+func (c *Candidate) MutateInPlace() {
 	// make 3 mutations
 	for i := 0; i < 3 ; i++ {
-		locus := rand.Intn(len(polygons))
-		pgon := polygons[locus]
+		locus := rand.Intn(len(c.Polygons))
+		pgon := c.Polygons[locus]
 		switch randomMutation() {
 		case MutationColor:
 			pgon.Color = MutateColor(pgon.Color)
@@ -174,9 +176,7 @@ func (c *Candidate) MutatedCopy() *Candidate {
 		}
 	}
 
-	result.RenderImage()
-
-	return result
+	c.RenderImage()
 }
 
 func (p *Polygon) AddPoint(point *Point) {
