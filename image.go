@@ -118,13 +118,8 @@ func sqDiff(x, y uint32) uint32 {
 	return (d * d) >> 2
 }
 
-func sqDiffUInt8(x, y uint8) uint8 {
-	var d uint8
-	if x > y {
-		d = x - y
-	} else {
-		d = y - x
-	}
+func sqDiffUInt8(x, y uint8) uint32 {
+	d := uint32(x) - uint32(y)
 	return (d * d)
 }
 
