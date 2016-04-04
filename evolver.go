@@ -140,7 +140,7 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 			generationsSinceChange++
 		}
 
-		if gen % 500 == 0 {
+		if gen % 500 == 0 && e.checkpoint != "" {
 			err := e.saveCheckpoint()
 			if err != nil {
 				log.Fatalf("error saving checkpoint file: %s", err)

@@ -11,24 +11,26 @@ import (
 )
 
 var (
-	maxGen               int
-	sourceFile, destFile string
+	maxGen int
+	srcImgFile string
+	dstImgFile string
 	host, port string
-	loadFrom, saveTo string
+	loadFromCheckpoint string
+	saveToCheckpoint string
 )
 
 func init() {
-	flag.IntVar(&maxGen, "maxgen", 10000, "the number of generations")
-	flag.StringVar(&sourceFile, "source", "", "the source input image file")
-	flag.StringVar(&destFile, "dest", "output.png", "the output image file")
+	flag.IntVar(&maxGen, "max", 100000, "the number of generations")
+	flag.StringVar(&srcImgFile, "source", "", "the source input image file")
+	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
 	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
 	flag.StringVar(&port, "port", "8080", "which port to http listen on")
-	flag.StringVar(&loadFrom, "load", "", "load from checkpoint file")
-	flag.StringVar(&saveTo, "save", "candidates.tmp", "save to checkpoint file")
+	flag.StringVar(&loadFromCheckpoint, "load", "", "load from checkpoint file")
+	flag.StringVar(&saveToCheckpoint, "save", "candidates.tmp", "save to checkpoint file")
 
 	flag.Parse()
 
-	if sourceFile == "" || destFile == "" {
+	if srcImgFile == "" || dstImgFile == "" {
 		flag.Usage()
 		os.Exit(1)
 	}
@@ -46,24 +48,26 @@ func init() {
 func main() {
 	refImg := polygen.MustReadImage("images/mona_lisa.jpg")
 
-	var safeImages []*polygen.SafeImage
+	// a set of thread-safe images that can be updated by the evolver, and displayed via the web
+	var previews []*polygen.SafeImage
 
 	totalImages := polygen.PopulationCount
+	placeholder := image.Rect(0, 0, 200, 200)
 	for i := 0; i < totalImages; i++ {
-		img := &polygen.SafeImage{Image: image.Rect(0, 10, 10, 10)}
-		safeImages = append(safeImages, img)
+		img := &polygen.SafeImage{Image: placeholder}
+		previews = append(previews, img)
 	}
 
-	go polygen.Serve(host + ":" + port, refImg, safeImages)
+	go polygen.Serve(host + ":" + port, refImg, previews)
 
-	evolver := polygen.NewEvolver(refImg, destFile, saveTo)
+	evolver := polygen.NewEvolver(refImg, dstImgFile, saveToCheckpoint)
 
-	if loadFrom != "" {
-		err := evolver.RestoreSavedCandidates(loadFrom)
+	if loadFromCheckpoint != "" {
+		err := evolver.RestoreSavedCandidates(loadFromCheckpoint)
 		if err != nil {
 			log.Fatalf("error restoring candidates from checkpoint: %s", err)
 		}
 	}
 
-	evolver.Run(maxGen, safeImages)
+	evolver.Run(maxGen, previews)
 }
