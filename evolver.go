@@ -7,7 +7,6 @@ import (
 	"image"
 	"io/ioutil"
 	"log"
-	"math/rand"
 	"sort"
 	"sync"
 	"time"
@@ -151,7 +150,6 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 }
 
 func (e *Evolver) evaluateCandidate(c *Candidate) {
-	//	diff, err := Compare(e.refImgRGBA, c.img)
 	diff, err := FastCompare(e.refImgRGBA, c.img)
 
 	if err != nil {
@@ -159,13 +157,6 @@ func (e *Evolver) evaluateCandidate(c *Candidate) {
 	}
 
 	c.Fitness = diff
-}
-
-func shufflePopulation(population []*Candidate) {
-	for i := range population {
-		j := rand.Intn(i + 1)
-		population[i], population[j] = population[j], population[i]
-	}
 }
 
 func printStats(sortedPop []*Candidate, generations, generationsSinceChange int, startTime time.Time) {
