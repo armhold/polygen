@@ -59,9 +59,7 @@ func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
 	e.generationsSinceChange = cp.GenerationsSinceChange
 	e.candidates[0] = cp.MostFit
 	e.mostFit = cp.MostFit
-
-	e.mostFit.RenderImage()
-	e.evaluateCandidate(e.mostFit)
+	e.renderAndEvaluate(e.mostFit)
 
 	return nil
 }
@@ -102,7 +100,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		e.candidates[0] = e.mostFit
 	}
 
-	e.evaluateCandidate(e.mostFit)
+	e.renderAndEvaluate(e.mostFit)
 
 	startTime := time.Now()
 
@@ -114,7 +112,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			for i := 0; i < 3; i++ {
 				cand.MutateInPlace()
 			}
-			e.evaluateCandidate(cand)
+
+			e.renderAndEvaluate(cand)
 			c <- cand
 			wg.Done()
 		}
@@ -175,7 +174,9 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, e.mostFit.Fitness, e.dstImgFile)
 }
 
-func (e *Evolver) evaluateCandidate(c *Candidate) {
+func (e *Evolver) renderAndEvaluate(c *Candidate) {
+	c.RenderImage()
+
 	diff, err := FastCompare(e.refImgRGBA, c.img)
 
 	if err != nil {

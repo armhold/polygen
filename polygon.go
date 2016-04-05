@@ -134,8 +134,6 @@ func (c *Candidate) MutateInPlace() {
 	default:
 		log.Fatal("fell through")
 	}
-
-	c.RenderImage()
 }
 
 func (p *Polygon) AddPoint(point Point) {

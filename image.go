@@ -75,10 +75,7 @@ func FastCompare(img1, img2 *image.RGBA) (int64, error) {
 func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 	result, ok := img.(*image.RGBA)
 	if ok {
-		log.Printf("automatically converted to RGBA")
 		return result
-	} else {
-		log.Printf("must convert manually to RGBA")
 	}
 
 	b := img.Bounds()
