@@ -24,6 +24,7 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 	result := &Evolver{
 		dstImgFile: dstImageFile,
 		checkpoint: checkpoint,
+		candidates: make([]*Candidate, PopulationCount),
 	}
 
 	result.refImgRGBA = ConvertToRGBA(refImg)
@@ -47,7 +48,7 @@ func (e *Evolver) RestoreSavedCandidate(checkpoint string) error {
 
 	candidate.RenderImage()
 	e.evaluateCandidate(&candidate)
-	e.candidates = []*Candidate{ &candidate }
+	e.candidates[0] = &candidate
 
 	return nil
 }
@@ -77,13 +78,10 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
-	var mostFit *Candidate
+	// may already have a candidate from prev call to RestoreSavedCandidate()
+	mostFit := e.candidates[0]
 
-	// we already have a candidate from prev call to RestoreSavedCandidate()
-	if len(e.candidates) > 0 {
-		mostFit = e.candidates[0]
-	} else {
-		e.candidates = make([]*Candidate, PopulationCount)
+	if mostFit == nil {
 		mostFit = RandomCandidate(w, h, polyCount)
 		e.candidates[0] = mostFit
 	}
