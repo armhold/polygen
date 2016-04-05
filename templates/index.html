@@ -18,16 +18,16 @@
 
 <img id="ref_image" src="/ref">
 
-<img class="preview_img" src="/image/0#">
-<img class="preview_img" src="/image/1#">
-<img class="preview_img" src="/image/2#">
-<img class="preview_img" src="/image/3#">
-<img class="preview_img" src="/image/4#">
-<img class="preview_img" src="/image/5#">
-<img class="preview_img" src="/image/6#">
-<img class="preview_img" src="/image/7#">
-<img class="preview_img" src="/image/8#">
-<img class="preview_img" src="/image/9#">
+<img class="preview_img" src="/image/0?cachebust=FOO">
+<img class="preview_img" src="/image/1?cachebust=FOO">
+<img class="preview_img" src="/image/2?cachebust=FOO">
+<img class="preview_img" src="/image/3?cachebust=FOO">
+<img class="preview_img" src="/image/4?cachebust=FOO">
+<img class="preview_img" src="/image/5?cachebust=FOO">
+<img class="preview_img" src="/image/6?cachebust=FOO">
+<img class="preview_img" src="/image/7?cachebust=FOO">
+<img class="preview_img" src="/image/8?cachebust=FOO">
+<img class="preview_img" src="/image/9?cachebust=FOO">
 
 <script type="application/javascript">
     function doPoll(){
@@ -35,7 +35,7 @@
 
         $('img[class="preview_img"]').each(function(index,item){
             var src = $(item).attr('src');
-            src = src.replace(/#.*$/gi, "#" + d);
+            src = src.replace(/cachebust=.*$/gi, "cachebust=" + d);
             $(item).attr('src', src);
         });
 
