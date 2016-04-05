@@ -1,7 +1,7 @@
+# Polygen - implementing an image efficiently with polygons (golang).
+
 ![logo](https://github.com/armhold/polygen/blob/master/logo.gif "polygen Logo")
 
-
-# Polygen - implementing an image efficiently with polygons (golang).
 
 Polygen uses a genetic algorithm to approximate an image with a small number of polygons. 
 
@@ -23,6 +23,11 @@ You can generate a fairly good approximation with surprisingly few polygons. Her
 has only 50 polygons (N generations):
 
 original.png original_poly.png
+
+
+Polygen includes a built-in web server, so you can watch the image evolve in more or less realtime.
+Just point your browser to http://localhost:8080.
+
 _
 
 
@@ -35,5 +40,4 @@ _
 
 Credit: this code is my own, but credit goes to Roger Johansson for the original idea, 
 which he documented [here](http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa). 
-
 
