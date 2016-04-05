@@ -13,11 +13,14 @@ import (
 )
 
 type Evolver struct {
-	refImgRGBA *image.RGBA
-	dstImgFile string
-	previews   []*SafeImage
-	checkpoint string
-	candidates []*Candidate
+	refImgRGBA             *image.RGBA
+	dstImgFile             string
+	previews               []*SafeImage
+	checkpoint             string
+	candidates             []*Candidate
+	mostFit                *Candidate
+	generation             int
+	generationsSinceChange int
 }
 
 func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
@@ -32,66 +35,78 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 	return result
 }
 
-func (e *Evolver) RestoreSavedCandidate(checkpoint string) error {
+type Checkpoint struct {
+	Generation             int
+	GenerationsSinceChange int
+	MostFit                *Candidate
+}
+
+func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
 	b, err := ioutil.ReadFile(checkpoint)
 	if err != nil {
-		return fmt.Errorf("error reading candidates file: %s", err)
+		return fmt.Errorf("error reading checkpoint file: %s", err)
 	}
 
 	decoder := gob.NewDecoder(bytes.NewBuffer(b))
 
-	var candidate Candidate
-	err = decoder.Decode(&candidate)
+	var cp Checkpoint
+	err = decoder.Decode(&cp)
 	if err != nil {
-		return fmt.Errorf("error decoding candidate: %s", err)
+		return fmt.Errorf("error decoding checkpoint: %s", err)
 	}
 
-	candidate.RenderImage()
-	e.evaluateCandidate(&candidate)
-	e.candidates[0] = &candidate
+	e.generation = cp.Generation
+	e.generationsSinceChange = cp.GenerationsSinceChange
+	e.candidates[0] = cp.MostFit
+	e.mostFit = cp.MostFit
+
+	e.mostFit.RenderImage()
+	e.evaluateCandidate(e.mostFit)
 
 	return nil
 }
 
 func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing candidate to %s...", e.checkpoint)
+	log.Printf("checkpointing to %s...", e.checkpoint)
 
 	buf := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buf)
 
-	err := encoder.Encode(e.candidates[0])
+	cp := &Checkpoint{
+		Generation:             e.generation,
+		GenerationsSinceChange: e.generationsSinceChange,
+		MostFit:                e.mostFit,
+	}
+
+	err := encoder.Encode(cp)
 	if err != nil {
-		return fmt.Errorf("error encoding candidate: %s", err)
+		return fmt.Errorf("error encoding checkpoint: %s", err)
 	}
 
 	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("error writing candidate to file: %s", err)
+		return fmt.Errorf("error writing checkpoint to file: %s", err)
 	}
 
 	return nil
 }
-
 
 // Run creates a
 func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
-	// may already have a candidate from prev call to RestoreSavedCandidate()
-	mostFit := e.candidates[0]
-
-	if mostFit == nil {
-		mostFit = RandomCandidate(w, h, polyCount)
-		e.candidates[0] = mostFit
+	// no candidate from prev call to RestoreSavedCandidate()
+	if e.mostFit == nil {
+		e.mostFit = RandomCandidate(w, h, polyCount)
+		e.candidates[0] = e.mostFit
 	}
 
-	e.evaluateCandidate(mostFit)
+	e.evaluateCandidate(e.mostFit)
 
 	startTime := time.Now()
-	generationsSinceChange := 0
 
-	for gen := 0; gen < maxGen; gen++ {
+	for ; e.generation < maxGen; e.generation++ {
 		c := make(chan *Candidate, PopulationCount)
 		var wg sync.WaitGroup
 
@@ -105,7 +120,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		wg.Add(PopulationCount - 1)
 
 		for i := 1; i < PopulationCount; i++ {
-			copy := mostFit.CopyOf()
+			copy := e.mostFit.CopyOf()
 			go processCandidate(copy)
 		}
 
@@ -118,8 +133,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
 
-		if gen%10 == 0 {
-			printStats(e.candidates, gen, generationsSinceChange, startTime)
+		if e.generation%10 == 0 {
+			printStats(e.candidates, e.generation, e.generationsSinceChange, startTime)
 		}
 
 		for i := 0; i < len(previews); i++ {
@@ -128,15 +143,15 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 		currBest := e.candidates[0]
 
-		if currBest.Fitness < mostFit.Fitness {
-			generationsSinceChange = 0
-			mostFit = currBest
+		if currBest.Fitness < e.mostFit.Fitness {
+			e.generationsSinceChange = 0
+			e.mostFit = currBest
 		} else {
-			generationsSinceChange++
+			e.generationsSinceChange++
 		}
 
-		if gen%500 == 0 {
-			err := mostFit.DrawAndSave(e.dstImgFile)
+		if e.generation%500 == 0 {
+			err := e.mostFit.DrawAndSave(e.dstImgFile)
 			if err != nil {
 				log.Fatalf("error saving output image: %s", err)
 			}
@@ -150,8 +165,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		}
 	}
 
-	mostFit.DrawAndSave(e.dstImgFile)
-	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, e.dstImgFile)
+	e.mostFit.DrawAndSave(e.dstImgFile)
+	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, e.mostFit.Fitness, e.dstImgFile)
 }
 
 func (e *Evolver) evaluateCandidate(c *Candidate) {

@@ -28,7 +28,7 @@ func init() {
 	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
 	flag.StringVar(&port, "port", "8080", "which port to http listen on")
 	flag.StringVar(&loadFromCheckpoint, "load", "", "load from checkpoint file")
-	flag.StringVar(&saveToCheckpoint, "save", "candidate.tmp", "save to checkpoint file")
+	flag.StringVar(&saveToCheckpoint, "save", "checkpoint.tmp", "save to checkpoint file")
 
 	flag.Parse()
 
@@ -65,7 +65,7 @@ func main() {
 	evolver := polygen.NewEvolver(refImg, dstImgFile, saveToCheckpoint)
 
 	if loadFromCheckpoint != "" {
-		err := evolver.RestoreSavedCandidate(loadFromCheckpoint)
+		err := evolver.RestoreFromCheckpoint(loadFromCheckpoint)
 		if err != nil {
 			log.Fatalf("error restoring candidates from checkpoint: %s", err)
 		}
