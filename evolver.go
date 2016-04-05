@@ -1,16 +1,15 @@
 package polygen
 
 import (
+	"bytes"
+	"encoding/gob"
+	"fmt"
 	"image"
+	"io/ioutil"
 	"log"
 	"sort"
-	"math/rand"
-	"time"
 	"sync"
-	"io/ioutil"
-	"fmt"
-	"encoding/gob"
-	"bytes"
+	"time"
 )
 
 type Evolver struct {
@@ -21,11 +20,11 @@ type Evolver struct {
 	candidates []*Candidate
 }
 
-
 func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
 	result := &Evolver{
 		dstImgFile: dstImageFile,
 		checkpoint: checkpoint,
+		candidates: make([]*Candidate, PopulationCount),
 	}
 
 	result.refImgRGBA = ConvertToRGBA(refImg)
@@ -33,8 +32,7 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 	return result
 }
 
-
-func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
+func (e *Evolver) RestoreSavedCandidate(checkpoint string) error {
 	b, err := ioutil.ReadFile(checkpoint)
 	if err != nil {
 		return fmt.Errorf("error reading candidates file: %s", err)
@@ -42,52 +40,49 @@ func (e *Evolver) RestoreSavedCandidates(checkpoint string) error {
 
 	decoder := gob.NewDecoder(bytes.NewBuffer(b))
 
-	var candidates []*Candidate
-	err = decoder.Decode(&candidates)
+	var candidate Candidate
+	err = decoder.Decode(&candidate)
 	if err != nil {
-		return fmt.Errorf("error decoding candidates: %s", err)
+		return fmt.Errorf("error decoding candidate: %s", err)
 	}
 
-	e.candidates = candidates
-
-	// TODO: could parallelize this, but probably not worth the code
-	for _, c := range e.candidates {
-		c.RenderImage()
-		e.evaluateCandidate(c)
-	}
+	candidate.RenderImage()
+	e.evaluateCandidate(&candidate)
+	e.candidates[0] = &candidate
 
 	return nil
 }
 
 func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing candidates to %s...", e.checkpoint)
+	log.Printf("checkpointing candidate to %s...", e.checkpoint)
 
 	buf := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buf)
 
-	err := encoder.Encode(e.candidates)
+	err := encoder.Encode(e.candidates[0])
 	if err != nil {
-		return fmt.Errorf("error encoding candidates: %s", err)
+		return fmt.Errorf("error encoding candidate: %s", err)
 	}
 
 	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
 	if err != nil {
-		return fmt.Errorf("error writing candidates to file: %s", err)
+		return fmt.Errorf("error writing candidate to file: %s", err)
 	}
 
 	return nil
 }
 
-func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
+
+// Run creates a
+func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
-	var mostFit *Candidate
-	if len(e.candidates) > 0 {
-		mostFit = e.candidates[0]
-	} else {
-		e.candidates = make([]*Candidate, PopulationCount)
-		mostFit = RandomCandidate(w, h)
+	// may already have a candidate from prev call to RestoreSavedCandidate()
+	mostFit := e.candidates[0]
+
+	if mostFit == nil {
+		mostFit = RandomCandidate(w, h, polyCount)
 		e.candidates[0] = mostFit
 	}
 
@@ -117,13 +112,13 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 		wg.Wait()
 
 		for i := 1; i < PopulationCount; i++ {
-			e.candidates[i] = <- c
+			e.candidates[i] = <-c
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
 
-		if gen % 10 == 0 {
+		if gen%10 == 0 {
 			printStats(e.candidates, gen, generationsSinceChange, startTime)
 		}
 
@@ -140,12 +135,15 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 			generationsSinceChange++
 		}
 
-		if gen % 500 == 0  {
+		if gen%500 == 0 {
 			err := mostFit.DrawAndSave(e.dstImgFile)
-			if err != nil {
-				log.Fatalf("error saving output image: %s", err)
+			if e.checkpoint != "" {
+				if err != nil {
+					log.Fatalf("error saving output image: %s", err)
+				}
 			}
 
+			err = e.saveCheckpoint()
 			if e.checkpoint != "" {
 				err = e.saveCheckpoint()
 				if err != nil {
@@ -159,9 +157,7 @@ func (e *Evolver) Run(maxGen int, previews []*SafeImage) {
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, mostFit.Fitness, e.dstImgFile)
 }
 
-
 func (e *Evolver) evaluateCandidate(c *Candidate) {
-//	diff, err := Compare(e.refImgRGBA, c.img)
 	diff, err := FastCompare(e.refImgRGBA, c.img)
 
 	if err != nil {
@@ -169,13 +165,6 @@ func (e *Evolver) evaluateCandidate(c *Candidate) {
 	}
 
 	c.Fitness = diff
-}
-
-func shufflePopulation(population []*Candidate) {
-	for i := range population {
-		j := rand.Intn(i + 1)
-		population[i], population[j] = population[j], population[i]
-	}
 }
 
 func printStats(sortedPop []*Candidate, generations, generationsSinceChange int, startTime time.Time) {

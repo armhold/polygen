@@ -150,4 +150,3 @@ func TestCompareMonaLisa(t *testing.T) {
 		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
 	}
 }
-

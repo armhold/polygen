@@ -10,7 +10,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"image/color"
 )
 
 func MustReadImage(file string) image.Image {
@@ -28,6 +27,7 @@ func MustReadImage(file string) image.Image {
 	return img
 }
 
+// traditional, slow compare that looks goes pixel-by-pixel
 func Compare(img1, img2 *image.RGBA) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
@@ -53,6 +53,8 @@ func Compare(img1, img2 *image.RGBA) (int64, error) {
 	return int64(math.Sqrt(float64(accumError))), nil
 }
 
+// fast compare that just diffs the underlying byte arrays directly.
+// This is more than 10x faster than Compare().
 func FastCompare(img1, img2 *image.RGBA) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
@@ -86,22 +88,6 @@ func ConvertToRGBA(img image.Image) (result *image.RGBA) {
 	return
 }
 
-func ConvertToNRGBA(img image.Image) (result *image.NRGBA) {
-	result, ok := img.(*image.NRGBA)
-	if ok {
-		//log.Printf("automatically converted to NRGBA")
-		return result
-	} else {
-		//log.Printf("must convert manually to NRGBA")
-	}
-
-	b := img.Bounds()
-	result = image.NewNRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
-	draw.Draw(result, result.Bounds(), img, b.Min, draw.Src)
-
-	return
-}
-
 // taken directly from image/color/color.go:
 //
 // sqDiff returns the squared-difference of x and y, shifted by 2 so that
@@ -118,28 +104,10 @@ func sqDiff(x, y uint32) uint32 {
 	return (d * d) >> 2
 }
 
-func sqDiffUInt8(x, y uint8) uint32 {
-	d := uint32(x) - uint32(y)
+func sqDiffUInt8(x, y uint8) uint64 {
+	// NB: uint8 max is 255, and 255 * 255 == 65025, so we could fit the results
+	// into a uint16. However uint64 benched slightly faster, so we use that.
+
+	d := uint64(x) - uint64(y)
 	return (d * d)
-}
-
-// for comparison, create a near-perfect copy of the ref image, with only a few pixels changed
-func createNearCopy(refImg image.Image) image.Image {
-	result := image.NewRGBA(refImg.Bounds())
-	b := result.Bounds()
-
-	draw.Draw(result, b, refImg, b.Min, draw.Src)
-
-	for i := 0; i < 5; i++ {
-		result.Set(b.Min.X + i, b.Min.Y, color.Black)
-	}
-
-	return result
-}
-
-// draw half of the refImg onto the destImg
-func drawHalf(destImg *image.RGBA, refImg image.Image) {
-	b := destImg.Bounds()
-	half := image.Rect(b.Min.X, b.Min.Y, b.Max.X, b.Max.Y/2)
-	draw.Draw(destImg, half, refImg, b.Min, draw.Src)
 }

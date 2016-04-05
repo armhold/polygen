@@ -7,7 +7,7 @@
     <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
     <meta name="description" content="">
     <meta name="author" content="">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <title>Polygen</title>
 </head>
 
@@ -18,35 +18,22 @@
 
 <img id="ref_image" src="/ref">
 
-<table>
-
-    <tr>
-        <td><img class="evolving_img" src="/image/0#"></td>
-        <td><img class="evolving_img" src="/image/1#"></td>
-        <td><img class="evolving_img" src="/image/2#"></td>
-        <td><img class="evolving_img" src="/image/3#"></td>
-        <td><img class="evolving_img" src="/image/4#"></td>
-    </tr>
-
-
-    <tr>
-        <td><img class="evolving_img" src="/image/5#"></td>
-        <td><img class="evolving_img" src="/image/6#"></td>
-        <td><img class="evolving_img" src="/image/7#"></td>
-        <td><img class="evolving_img" src="/image/8#"></td>
-        <td><img class="evolving_img" src="/image/9#"></td>
-    </tr>
-
-
-</table>
-
-
+<img class="preview_img" src="/image/0#">
+<img class="preview_img" src="/image/1#">
+<img class="preview_img" src="/image/2#">
+<img class="preview_img" src="/image/3#">
+<img class="preview_img" src="/image/4#">
+<img class="preview_img" src="/image/5#">
+<img class="preview_img" src="/image/6#">
+<img class="preview_img" src="/image/7#">
+<img class="preview_img" src="/image/8#">
+<img class="preview_img" src="/image/9#">
 
 <script type="application/javascript">
     function doPoll(){
         var d = new Date().getTime();
 
-        $('img[class="evolving_img"]').each(function(index,item){
+        $('img[class="preview_img"]').each(function(index,item){
             var src = $(item).attr('src');
             src = src.replace(/#.*$/gi, "#" + d);
             $(item).attr('src', src);

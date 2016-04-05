@@ -12,6 +12,7 @@ import (
 
 var (
 	maxGen int
+	polyCount int
 	srcImgFile string
 	dstImgFile string
 	host, port string
@@ -21,12 +22,13 @@ var (
 
 func init() {
 	flag.IntVar(&maxGen, "max", 100000, "the number of generations")
+	flag.IntVar(&polyCount, "poly", 50, "the number of polygons")
 	flag.StringVar(&srcImgFile, "source", "", "the source input image file")
 	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
 	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
 	flag.StringVar(&port, "port", "8080", "which port to http listen on")
 	flag.StringVar(&loadFromCheckpoint, "load", "", "load from checkpoint file")
-	flag.StringVar(&saveToCheckpoint, "save", "candidates.tmp", "save to checkpoint file")
+	flag.StringVar(&saveToCheckpoint, "save", "candidate.tmp", "save to checkpoint file")
 
 	flag.Parse()
 
@@ -63,11 +65,11 @@ func main() {
 	evolver := polygen.NewEvolver(refImg, dstImgFile, saveToCheckpoint)
 
 	if loadFromCheckpoint != "" {
-		err := evolver.RestoreSavedCandidates(loadFromCheckpoint)
+		err := evolver.RestoreSavedCandidate(loadFromCheckpoint)
 		if err != nil {
 			log.Fatalf("error restoring candidates from checkpoint: %s", err)
 		}
 	}
 
-	evolver.Run(maxGen, previews)
+	evolver.Run(maxGen, polyCount, previews)
 }
