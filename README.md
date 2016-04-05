@@ -1,3 +1,6 @@
+![logo](https://github.com/armhold/polygen/blob/master/logo.gif "polygen Logo")
+
+
 # Polygen - implementing an image efficiently with polygons (golang).
 
 Polygen uses a genetic algorithm to approximate an image with a small number of polygons. 

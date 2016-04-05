@@ -119,6 +119,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 		wg.Add(PopulationCount - 1)
 
+		// mostFit is already in slot 0
 		for i := 1; i < PopulationCount; i++ {
 			copy := e.mostFit.CopyOf()
 			go processCandidate(copy)
@@ -150,7 +151,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			e.generationsSinceChange++
 		}
 
-		if e.generation%500 == 0 {
+		if e.generation%250 == 0 {
+			cpSave := time.Now()
 			err := e.mostFit.DrawAndSave(e.dstImgFile)
 			if err != nil {
 				log.Fatalf("error saving output image: %s", err)
@@ -162,6 +164,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 					log.Fatalf("error saving checkpoint file: %s", err)
 				}
 			}
+			dur := time.Since(cpSave)
+			log.Printf("checkpoint took %s", dur)
 		}
 	}
 
