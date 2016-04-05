@@ -99,49 +99,40 @@ func (c *Candidate) CopyOf() *Candidate {
 }
 
 func (c *Candidate) MutateInPlace() {
-	shouldShufflePolygons := false
+	locus := rand.Intn(len(c.Polygons))
+	pgon := c.Polygons[locus]
+	switch randomMutation() {
+	case MutationColor:
+		pgon.Color = MutateColor(pgon.Color)
 
-	// make 3 mutations
-	for i := 0; i < 3; i++ {
-		locus := rand.Intn(len(c.Polygons))
-		pgon := c.Polygons[locus]
-		switch randomMutation() {
-		case MutationColor:
-			pgon.Color = MutateColor(pgon.Color)
+	case MutationAlpha:
+		pgon.Color = MutateAlpha(pgon.Color)
 
-		case MutationAlpha:
-			pgon.Color = MutateAlpha(pgon.Color)
+	case MutationPoint:
+		pi := rand.Intn(len(pgon.Points))
+		pgon.Points[pi].MutateNearby(c.W, c.H)
 
-		case MutationPoint:
-			pi := rand.Intn(len(pgon.Points))
-			pgon.Points[pi].MutateNearby(c.W, c.H)
-
-		case MutationZOrder:
-			shouldShufflePolygons = true
-
-		case MutationAddOrDeletePoint:
-			if len(pgon.Points) == MinPolygonPoints {
-				// can't delete
-				pgon.AddPoint(RandomPoint(c.W, c.H))
-			} else if len(pgon.Points) == MaxPolygonPoints {
-				// can't add
-				pgon.DeleteRandomPoint()
-			} else {
-				// we can do either add or delete
-				if NextBool() {
-					pgon.AddPoint(RandomPoint(c.W, c.H))
-				} else {
-					pgon.DeleteRandomPoint()
-				}
-			}
-
-		default:
-			log.Fatal("fell through")
-		}
-	}
-
-	if shouldShufflePolygons {
+	case MutationZOrder:
 		shufflePolygonZOrder(c.Polygons)
+
+	case MutationAddOrDeletePoint:
+		if len(pgon.Points) == MinPolygonPoints {
+			// can't delete
+			pgon.AddPoint(RandomPoint(c.W, c.H))
+		} else if len(pgon.Points) == MaxPolygonPoints {
+			// can't add
+			pgon.DeleteRandomPoint()
+		} else {
+			// we can do either add or delete
+			if NextBool() {
+				pgon.AddPoint(RandomPoint(c.W, c.H))
+			} else {
+				pgon.DeleteRandomPoint()
+			}
+		}
+
+	default:
+		log.Fatal("fell through")
 	}
 
 	c.RenderImage()

@@ -111,7 +111,9 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		var wg sync.WaitGroup
 
 		processCandidate := func(cand *Candidate) {
-			cand.MutateInPlace()
+			for i := 0; i < 3; i++ {
+				cand.MutateInPlace()
+			}
 			e.evaluateCandidate(cand)
 			c <- cand
 			wg.Done()
