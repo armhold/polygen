@@ -143,7 +143,7 @@ func TestCompareMonaLisa(t *testing.T) {
 
 	// change a single pixel
 	c := img2.At(50, 50)
-	img2.Set(50, 50, MutateColor(c))
+	img2.Set(50, 50, mutateColor(c))
 	diff, err = Compare(img1, img2)
 	expected = int64(5397)
 	if diff != expected {

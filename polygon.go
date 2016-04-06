@@ -2,7 +2,6 @@ package polygen
 
 import (
 	"encoding/gob"
-	"fmt"
 	"image"
 	"image/color"
 	"log"
@@ -32,7 +31,7 @@ var (
 
 func init() {
 	// need to give an example of a concrete type for the color.Color interface
-	gob.Register(RandomColor())
+	gob.Register(randomColor())
 }
 
 // Candidate is a potential solution (set of polygons) to the problem of how to best represent the reference image.
@@ -66,28 +65,28 @@ func (p *Polygon) Copy() *Polygon {
 func RandomCandidate(w, h, polyCount int) *Candidate {
 	result := &Candidate{W: w, H: h}
 	for i := 0; i < polyCount; i++ {
-		result.Polygons = append(result.Polygons, RandomPolygon(w, h))
+		result.Polygons = append(result.Polygons, randomPolygon(w, h))
 	}
 
-	result.RenderImage()
+	result.renderImage()
 
 	return result
 }
 
-func RandomPolygon(maxW, maxH int) *Polygon {
+func randomPolygon(maxW, maxH int) *Polygon {
 	result := &Polygon{}
-	result.Color = RandomColor()
+	result.Color = randomColor()
 
 	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints+1)
 
 	for i := 0; i < numPoints; i++ {
-		result.AddPoint(RandomPoint(maxW, maxH))
+		result.addPoint(randomPoint(maxW, maxH))
 	}
 
 	return result
 }
 
-func RandomPoint(maxW, maxH int) Point {
+func randomPoint(maxW, maxH int) Point {
 	return Point{rand.Intn(maxW), rand.Intn(maxH)}
 }
 
@@ -101,15 +100,16 @@ func (c *Candidate) CopyOf() *Candidate {
 	return result
 }
 
-func (c *Candidate) MutateInPlace() {
+// mutateInPlace chooses a random polygon from the candidate and makes a random mutation to it.
+func (c *Candidate) mutateInPlace() {
 	locus := rand.Intn(len(c.Polygons))
 	pgon := c.Polygons[locus]
 	switch randomMutation() {
 	case MutationColor:
-		pgon.Color = MutateColor(pgon.Color)
+		pgon.Color = mutateColor(pgon.Color)
 
 	case MutationAlpha:
-		pgon.Color = MutateAlpha(pgon.Color)
+		pgon.Color = mutateAlpha(pgon.Color)
 
 	case MutationPoint:
 		pi := rand.Intn(len(pgon.Points))
@@ -121,16 +121,16 @@ func (c *Candidate) MutateInPlace() {
 	case MutationAddOrDeletePoint:
 		if len(pgon.Points) == MinPolygonPoints {
 			// can't delete
-			pgon.AddPoint(RandomPoint(c.W, c.H))
+			pgon.addPoint(randomPoint(c.W, c.H))
 		} else if len(pgon.Points) == MaxPolygonPoints {
 			// can't add
-			pgon.DeleteRandomPoint()
+			pgon.deleteRandomPoint()
 		} else {
 			// we can do either add or delete
 			if NextBool() {
-				pgon.AddPoint(RandomPoint(c.W, c.H))
+				pgon.addPoint(randomPoint(c.W, c.H))
 			} else {
-				pgon.DeleteRandomPoint()
+				pgon.deleteRandomPoint()
 			}
 		}
 
@@ -139,11 +139,11 @@ func (c *Candidate) MutateInPlace() {
 	}
 }
 
-func (p *Polygon) AddPoint(point Point) {
+func (p *Polygon) addPoint(point Point) {
 	p.Points = append(p.Points, point)
 }
 
-func (p *Polygon) DeleteRandomPoint() {
+func (p *Polygon) deleteRandomPoint() {
 	i := rand.Intn(len(p.Points))
 	p.Points = append(p.Points[:i], p.Points[i+1:]...)
 }
@@ -180,15 +180,15 @@ func (p *Point) MutateNearby(maxW, maxH int) {
 	p.Y = y
 }
 
-// RandomColor returns a color with completely random values for RGBA.
-func RandomColor() color.Color {
+// randomColor returns a color with completely random values for RGBA.
+func randomColor() color.Color {
 	// start with non-premultiplied RGBA
 	c := color.NRGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: uint8(rand.Intn(256))}
 	return color.RGBAModel.Convert(c)
 }
 
-// MutateColor returns a new color with a single random mutation to one of the RGBA values.
-func MutateColor(c color.Color) color.Color {
+// mutateColor returns a new color with a single random mutation to one of the RGBA values.
+func mutateColor(c color.Color) color.Color {
 	// get the non-premultiplied rgba values
 	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
 
@@ -210,8 +210,8 @@ func MutateColor(c color.Color) color.Color {
 	return color.RGBAModel.Convert(nrgba)
 }
 
-// MutateAlpha a new color whose alpha level has been randomly modified.
-func MutateAlpha(c color.Color) color.Color {
+// mutateAlpha a new color whose alpha level has been randomly modified.
+func mutateAlpha(c color.Color) color.Color {
 	// get the non-premultiplied rgba values
 	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
 	nrgba.A = uint8(rand.Intn(256))
@@ -223,7 +223,7 @@ func randomMutation() int {
 	return Mutations[rand.Intn(len(Mutations))]
 }
 
-func (cd *Candidate) RenderImage() {
+func (cd *Candidate) renderImage() {
 	cd.img = image.NewRGBA(image.Rect(0, 0, cd.W, cd.H))
 	gc := draw2dimg.NewGraphicContext(cd.img)
 
@@ -255,13 +255,9 @@ func (cd *Candidate) RenderImage() {
 	}
 }
 
-func (cd *Candidate) DrawAndSave(destFile string) error {
+func (cd *Candidate) drawAndSave(destFile string) error {
 	log.Printf("saving output image to: %s", destFile)
 	return draw2dimg.SaveToPngFile(destFile, cd.img)
-}
-
-func (cd *Candidate) String() string {
-	return fmt.Sprintf("fitness: %d", cd.Fitness)
 }
 
 func shufflePolygonZOrder(polygons []*Polygon) {

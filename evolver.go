@@ -109,7 +109,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 		processCandidate := func(cand *Candidate) {
 			for i := 0; i < 3; i++ {
-				cand.MutateInPlace()
+				cand.mutateInPlace()
 			}
 
 			e.renderAndEvaluate(cand)
@@ -135,7 +135,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		sort.Sort(ByFitness(e.candidates))
 
 		if e.generation%10 == 0 {
-			printStats(e.candidates, e.generation, e.generationsSinceChange, startTime)
+			e.printStats(startTime)
 		}
 
 		for i := 0; i < len(previews); i++ {
@@ -153,7 +153,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 		if e.generation%250 == 0 {
 			cpSave := time.Now()
-			err := e.mostFit.DrawAndSave(e.dstImgFile)
+			err := e.mostFit.drawAndSave(e.dstImgFile)
 			if err != nil {
 				log.Fatalf("error saving output image: %s", err)
 			}
@@ -169,12 +169,12 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		}
 	}
 
-	e.mostFit.DrawAndSave(e.dstImgFile)
+	e.mostFit.drawAndSave(e.dstImgFile)
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, e.mostFit.Fitness, e.dstImgFile)
 }
 
 func (e *Evolver) renderAndEvaluate(c *Candidate) {
-	c.RenderImage()
+	c.renderImage()
 
 	diff, err := FastCompare(e.refImgRGBA, c.img)
 
@@ -185,10 +185,10 @@ func (e *Evolver) renderAndEvaluate(c *Candidate) {
 	c.Fitness = diff
 }
 
-func printStats(sortedPop []*Candidate, generations, generationsSinceChange int, startTime time.Time) {
+func (e *Evolver) printStats(startTime time.Time) {
 	dur := time.Since(startTime)
-	best := sortedPop[0].Fitness
-	worst := sortedPop[len(sortedPop)-1].Fitness
+	best := e.candidates[0].Fitness
+	worst := e.candidates[len(e.candidates)-1].Fitness
 
-	log.Printf("dur: %s, gen: %d, since change: %d, best: %d, worst: %d", dur, generations, generationsSinceChange, best, worst)
+	log.Printf("dur: %s, gen: %d, since change: %d, best: %d, worst: %d", dur, e.generation, e.generationsSinceChange, best, worst)
 }
