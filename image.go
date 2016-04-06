@@ -106,5 +106,5 @@ func sqDiffUInt8(x, y uint8) uint64 {
 	// into a uint16. However uint64 benched slightly faster, so we use that.
 
 	d := uint64(x) - uint64(y)
-	return (d * d)
+	return d * d
 }

@@ -20,9 +20,11 @@ create a population of offspring.
 1. Repeat for N generations.
 
 You can generate a fairly good approximation with surprisingly few polygons. Here's a sample that
-has only 50 polygons (N generations):
+has only 50 polygons (~380K generations):
 
-original.png original_poly.png
+
+![starry-night](https://github.com/armhold/polygen/blob/master/images/starry.jpg "starry night (orig)")
+![starry-night 50 polygons](https://github.com/armhold/polygen/blob/master/images/starry-polygons.jpg "starry night (50 polygons)")
 
 
 Polygen includes a built-in web server, so you can watch the image evolve in more or less realtime.
