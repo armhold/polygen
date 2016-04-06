@@ -22,6 +22,14 @@ type Evolver struct {
 	generationsSinceChange int
 }
 
+// Checkpoint is used for serializing the current best candidate and corresponding generation
+// count to a checkpoint file.
+type Checkpoint struct {
+	Generation             int
+	GenerationsSinceChange int
+	MostFit                *Candidate
+}
+
 func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
 	result := &Evolver{
 		dstImgFile: dstImageFile,
@@ -34,66 +42,14 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evo
 	return result
 }
 
-type Checkpoint struct {
-	Generation             int
-	GenerationsSinceChange int
-	MostFit                *Candidate
-}
-
-func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
-	b, err := ioutil.ReadFile(checkpoint)
-	if err != nil {
-		return fmt.Errorf("error reading checkpoint file: %s", err)
-	}
-
-	decoder := gob.NewDecoder(bytes.NewBuffer(b))
-
-	var cp Checkpoint
-	err = decoder.Decode(&cp)
-	if err != nil {
-		return fmt.Errorf("error decoding checkpoint: %s", err)
-	}
-
-	e.generation = cp.Generation
-	e.generationsSinceChange = cp.GenerationsSinceChange
-	e.candidates[0] = cp.MostFit
-	e.mostFit = cp.MostFit
-	e.renderAndEvaluate(e.mostFit)
-
-	return nil
-}
-
-func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing to %s...", e.checkpoint)
-
-	buf := new(bytes.Buffer)
-	encoder := gob.NewEncoder(buf)
-
-	cp := &Checkpoint{
-		Generation:             e.generation,
-		GenerationsSinceChange: e.generationsSinceChange,
-		MostFit:                e.mostFit,
-	}
-
-	err := encoder.Encode(cp)
-	if err != nil {
-		return fmt.Errorf("error encoding checkpoint: %s", err)
-	}
-
-	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
-	if err != nil {
-		return fmt.Errorf("error writing checkpoint to file: %s", err)
-	}
-
-	return nil
-}
-
-// Run creates a
+// Run runs the Evolver until maxGen generations have been evaluated.
+// At each generation, the candidate images are rendered & evaluated, and the preview images are
+// updated to reflect the current state.
 func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
-	// no candidate from prev call to RestoreSavedCandidate()
+	// no candidate from prev call to RestoreFromCheckpoint()
 	if e.mostFit == nil {
 		e.mostFit = RandomCandidate(w, h, polyCount)
 		e.candidates[0] = e.mostFit
@@ -171,6 +127,54 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 	e.mostFit.drawAndSave(e.dstImgFile)
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, e.mostFit.Fitness, e.dstImgFile)
+}
+
+func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
+	b, err := ioutil.ReadFile(checkpoint)
+	if err != nil {
+		return fmt.Errorf("error reading checkpoint file: %s", err)
+	}
+
+	decoder := gob.NewDecoder(bytes.NewBuffer(b))
+
+	var cp Checkpoint
+	err = decoder.Decode(&cp)
+	if err != nil {
+		return fmt.Errorf("error decoding checkpoint: %s", err)
+	}
+
+	e.generation = cp.Generation
+	e.generationsSinceChange = cp.GenerationsSinceChange
+	e.candidates[0] = cp.MostFit
+	e.mostFit = cp.MostFit
+	e.renderAndEvaluate(e.mostFit)
+
+	return nil
+}
+
+func (e *Evolver) saveCheckpoint() error {
+	log.Printf("checkpointing to %s...", e.checkpoint)
+
+	buf := new(bytes.Buffer)
+	encoder := gob.NewEncoder(buf)
+
+	cp := &Checkpoint{
+		Generation:             e.generation,
+		GenerationsSinceChange: e.generationsSinceChange,
+		MostFit:                e.mostFit,
+	}
+
+	err := encoder.Encode(cp)
+	if err != nil {
+		return fmt.Errorf("error encoding checkpoint: %s", err)
+	}
+
+	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
+	if err != nil {
+		return fmt.Errorf("error writing checkpoint to file: %s", err)
+	}
+
+	return nil
 }
 
 func (e *Evolver) renderAndEvaluate(c *Candidate) {
