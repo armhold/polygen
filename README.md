@@ -1,9 +1,19 @@
-# Polygen - implementing an image efficiently with polygons (golang).
+# Polygen - Polygen uses a genetic algorithm to approximate an image with a small number of polygons.
 
-![logo](https://github.com/armhold/polygen/blob/master/images/logo.gif "polygen Logo")
+###
 
+You can generate a fairly good approximation with surprisingly few polygons. Here's a sample that
+has only 50 polygons (~380K generations):
 
-Polygen uses a genetic algorithm to approximate an image with a small number of polygons. 
+![starry-night](https://github.com/armhold/polygen/blob/master/images/starry.jpg "starry night (orig)")
+![starry-night 50 polygons](https://github.com/armhold/polygen/blob/master/images/starry-50-polygons.png "starry night (50 polygons)")
+
+This one is 100 polygons:
+
+![mona-lisa](https://github.com/armhold/polygen/blob/master/images/mona_lisa.jpg "mona lisa (orig)")
+![mona-lisa 100 polygons](https://github.com/armhold/polygen/blob/master/images/mona_lisa-100-polygons.png "mona lisa (100 polygons)")
+
+###
 
 The algorithm is pretty simple:
 
@@ -19,32 +29,20 @@ create a population of offspring.
 
 1. Repeat for N generations.
 
-You can generate a fairly good approximation with surprisingly few polygons. Here's a sample that
-has only 50 polygons (~380K generations):
 
-
-![starry-night](https://github.com/armhold/polygen/blob/master/images/starry.jpg "starry night (orig)")
-![starry-night 50 polygons](https://github.com/armhold/polygen/blob/master/images/starry-50-polygons.png "starry night (50 polygons)")
-
-
-
-![mona-lisa](https://github.com/armhold/polygen/blob/master/images/mona_lisa.jpg "mona lisa (orig)")
-![mona-lisa 100 polygons](https://github.com/armhold/polygen/blob/master/images/mona_lisa-100-polygons.png "mona lisa (100 polygons)")
-
+###
 
 Polygen includes a built-in web server, so you can watch the image evolve in more or less realtime.
-Just point your browser to http://localhost:8080.
-
-_
+Just point your browser to [http://localhost:8080](http://localhost:8080).
 
 
+![logo](https://github.com/armhold/polygen/blob/master/images/logo.gif "polygen Logo")
+
+###
 
 
+### Credit
 
-
-
-
-
-Credit: this code is my own, but credit goes to Roger Johansson for the original idea, 
+This code is my own, but credit goes to Roger Johansson for the original idea,
 which he documented [here](http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa). 
 
