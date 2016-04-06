@@ -3,11 +3,12 @@ package polygen
 import (
 	"encoding/gob"
 	"fmt"
-	"github.com/llgcode/draw2d/draw2dimg"
 	"image"
 	"image/color"
 	"log"
 	"math/rand"
+
+	"github.com/llgcode/draw2d/draw2dimg"
 )
 
 const (

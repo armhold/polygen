@@ -1,4 +1,4 @@
-# Polygen - Polygen uses a genetic algorithm to approximate an image with a small number of polygons.
+# Polygen uses a genetic algorithm to approximate an image with a small number of polygons.
 
 ###
 
@@ -30,7 +30,13 @@ create a population of offspring.
 1. Repeat for N generations.
 
 
-###
+### Usage
+
+1. `$ go get github.com/llgcode/draw2d/draw2dimg`
+1. `go run cmd/polygen/main.go -source images/mona_lisa.jpg -poly 50`
+1. Let it run until you are happy with the output (in `output.png`), or until you notice that there is not much change
+between generations.
+
 
 Polygen includes a built-in web server, so you can watch the image evolve in more or less realtime.
 Just point your browser to [http://localhost:8080](http://localhost:8080).
