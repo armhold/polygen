@@ -10,12 +10,14 @@ import (
 	"sort"
 	"sync"
 	"time"
+	"os"
 )
 
+// Evolver uses a genetic algorithm to evolve a set of polygons to approximate an image.
 type Evolver struct {
 	refImgRGBA             *image.RGBA
 	dstImgFile             string
-	checkpoint             string
+	checkPointFile         string
 	candidates             []*Candidate
 	mostFit                *Candidate
 	generation             int
@@ -30,16 +32,24 @@ type Checkpoint struct {
 	MostFit                *Candidate
 }
 
-func NewEvolver(refImg image.Image, dstImageFile string, checkpoint string) *Evolver {
+func NewEvolver(refImg image.Image, dstImageFile string, checkPointFile string) (*Evolver, error) {
 	result := &Evolver{
-		dstImgFile: dstImageFile,
-		checkpoint: checkpoint,
-		candidates: make([]*Candidate, PopulationCount),
+		dstImgFile:     dstImageFile,
+		checkPointFile: checkPointFile,
+		candidates:     make([]*Candidate, PopulationCount),
 	}
 
 	result.refImgRGBA = ConvertToRGBA(refImg)
 
-	return result
+	// if there's an existing checkpoint file, restore from last checkpoint
+	if _, err := os.Stat(checkPointFile); !os.IsNotExist(err) {
+		err := result.restoreFromCheckpoint()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return result, nil
 }
 
 // Run runs the Evolver until maxGen generations have been evaluated.
@@ -114,7 +124,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 				log.Fatalf("error saving output image: %s", err)
 			}
 
-			if e.checkpoint != "" {
+			if e.checkPointFile != "" {
 				err = e.saveCheckpoint()
 				if err != nil {
 					log.Fatalf("error saving checkpoint file: %s", err)
@@ -129,10 +139,10 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	log.Printf("after %d generations, fitness is: %d, saved to %s", maxGen, e.mostFit.Fitness, e.dstImgFile)
 }
 
-func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
-	b, err := ioutil.ReadFile(checkpoint)
+func (e *Evolver) restoreFromCheckpoint() error {
+	b, err := ioutil.ReadFile(e.checkPointFile)
 	if err != nil {
-		return fmt.Errorf("error reading checkpoint file: %s", err)
+		return fmt.Errorf("error reading checkpoint file: %s: %s", e.checkPointFile, err)
 	}
 
 	decoder := gob.NewDecoder(bytes.NewBuffer(b))
@@ -140,7 +150,7 @@ func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
 	var cp Checkpoint
 	err = decoder.Decode(&cp)
 	if err != nil {
-		return fmt.Errorf("error decoding checkpoint: %s", err)
+		return fmt.Errorf("error decoding checkpoint file: %s %s", e.checkPointFile, err)
 	}
 
 	e.generation = cp.Generation
@@ -153,7 +163,7 @@ func (e *Evolver) RestoreFromCheckpoint(checkpoint string) error {
 }
 
 func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing to %s...", e.checkpoint)
+	log.Printf("checkpointing to %s...", e.checkPointFile)
 
 	buf := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buf)
@@ -169,7 +179,7 @@ func (e *Evolver) saveCheckpoint() error {
 		return fmt.Errorf("error encoding checkpoint: %s", err)
 	}
 
-	err = ioutil.WriteFile(e.checkpoint, buf.Bytes(), 0644)
+	err = ioutil.WriteFile(e.checkPointFile, buf.Bytes(), 0644)
 	if err != nil {
 		return fmt.Errorf("error writing checkpoint to file: %s", err)
 	}

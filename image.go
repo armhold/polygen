@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
-	_ "image/gif"
+	_ "image/gif" // register image formats
 	_ "image/jpeg"
-	_ "image/png" // register PNG format
+	_ "image/png"
 	"log"
 	"math"
 	"os"
@@ -27,8 +27,8 @@ func MustReadImage(file string) image.Image {
 	return img
 }
 
-// traditional, slow compare that looks goes pixel-by-pixel
-func Compare(img1, img2 *image.RGBA) (int64, error) {
+// Compare compares images by computing the square root of the total sum of individual squared pixel differences.
+func Compare(img1, img2 image.Image) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
 	}
@@ -53,8 +53,8 @@ func Compare(img1, img2 *image.RGBA) (int64, error) {
 	return int64(math.Sqrt(float64(accumError))), nil
 }
 
-// fast compare that just diffs the underlying byte arrays directly.
-// This is more than 10x faster than Compare().
+// FastCompare compares images by diffing the underlying byte arrays directly.
+// This is more than 10x faster than Compare(), but requires a concrete instance of image.RGBA.
 func FastCompare(img1, img2 *image.RGBA) (int64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
