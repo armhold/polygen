@@ -15,7 +15,6 @@ import (
 type Evolver struct {
 	refImgRGBA             *image.RGBA
 	dstImgFile             string
-	previews               []*SafeImage
 	checkpoint             string
 	candidates             []*Candidate
 	mostFit                *Candidate

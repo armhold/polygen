@@ -20,7 +20,6 @@ const (
 )
 
 const (
-	MutationChance           = 0.25
 	PopulationCount          = 10
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
@@ -36,20 +35,23 @@ func init() {
 	gob.Register(RandomColor())
 }
 
+// Candidate is a potential solution (set of polygons) to the problem of how to best represent the reference image.
 type Candidate struct {
 	W, H     int
 	Polygons []*Polygon
-	Fitness  int64
 	img      *image.RGBA
+	Fitness  int64
 }
 
-type Point struct {
-	X, Y int
-}
-
+// Polygon is a set of points with a given fill color.
 type Polygon struct {
 	Points []Point
 	color.Color
+}
+
+// Point defines a vertex in a Polygon.
+type Point struct {
+	X, Y int
 }
 
 func (p *Polygon) Copy() *Polygon {
@@ -74,7 +76,7 @@ func RandomCandidate(w, h, polyCount int) *Candidate {
 
 func RandomPolygon(maxW, maxH int) *Polygon {
 	result := &Polygon{}
-	result.Color = color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256))}
+	result.Color = RandomColor()
 
 	numPoints := RandomInt(MinPolygonPoints, MaxPolygonPoints+1)
 
@@ -178,11 +180,14 @@ func (p *Point) MutateNearby(maxW, maxH int) {
 	p.Y = y
 }
 
+// RandomColor returns a color with completely random values for RGBA.
 func RandomColor() color.Color {
+	// start with non-premultiplied RGBA
 	c := color.NRGBA{R: uint8(rand.Intn(256)), G: uint8(rand.Intn(256)), B: uint8(rand.Intn(256)), A: uint8(rand.Intn(256))}
 	return color.RGBAModel.Convert(c)
 }
 
+// MutateColor returns a new color with a single random mutation to one of the RGBA values.
 func MutateColor(c color.Color) color.Color {
 	// get the non-premultiplied rgba values
 	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
@@ -205,6 +210,7 @@ func MutateColor(c color.Color) color.Color {
 	return color.RGBAModel.Convert(nrgba)
 }
 
+// MutateAlpha a new color whose alpha level has been randomly modified.
 func MutateAlpha(c color.Color) color.Color {
 	// get the non-premultiplied rgba values
 	nrgba := color.NRGBAModel.Convert(c).(color.NRGBA)
@@ -256,10 +262,6 @@ func (cd *Candidate) DrawAndSave(destFile string) error {
 
 func (cd *Candidate) String() string {
 	return fmt.Sprintf("fitness: %d", cd.Fitness)
-}
-
-func shouldMutate() bool {
-	return rand.Float32() < MutationChance
 }
 
 func shufflePolygonZOrder(polygons []*Polygon) {
