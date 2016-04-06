@@ -24,7 +24,7 @@ has only 50 polygons (~380K generations):
 
 
 ![starry-night](https://github.com/armhold/polygen/blob/master/images/starry.jpg "starry night (orig)")
-![starry-night 50 polygons](https://github.com/armhold/polygen/blob/master/images/starry-polygons.jpg "starry night (50 polygons)")
+![starry-night 50 polygons](https://github.com/armhold/polygen/blob/master/images/starry-polygons.png "starry night (50 polygons)")
 
 
 Polygen includes a built-in web server, so you can watch the image evolve in more or less realtime.
