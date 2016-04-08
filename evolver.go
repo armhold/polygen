@@ -8,7 +8,6 @@ import (
 	"io/ioutil"
 	"log"
 	"sort"
-	"sync"
 	"time"
 	"os"
 )
@@ -69,9 +68,10 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 	startTime := time.Now()
 
+	// to synchronize workers
+	c := make(chan struct{})
+
 	for ; e.generation < maxGen; e.generation++ {
-		c := make(chan *Candidate, PopulationCount)
-		var wg sync.WaitGroup
 
 		processCandidate := func(cand *Candidate) {
 			for i := 0; i < 3; i++ {
@@ -79,30 +79,24 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			}
 
 			e.renderAndEvaluate(cand)
-			c <- cand
-			wg.Done()
+			c <- struct{}{}
 		}
 
-		wg.Add(PopulationCount - 1)
 
-		// mostFit is already in slot 0
+		// mostFit is already in slot 0, so start at 1
 		for i := 1; i < PopulationCount; i++ {
-			copy := e.mostFit.CopyOf()
-			go processCandidate(copy)
+			e.candidates[i] = e.mostFit.CopyOf()
+			go processCandidate(e.candidates[i])
 		}
 
-		wg.Wait()
 
+		// wait for all processCandidate() calls to return
 		for i := 1; i < PopulationCount; i++ {
-			e.candidates[i] = <-c
+			<-c
 		}
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
-
-		if e.generation%10 == 0 {
-			e.printStats(startTime)
-		}
 
 		for i := 0; i < len(previews); i++ {
 			previews[i].Update(e.candidates[i].img)
@@ -115,6 +109,10 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			e.mostFit = currBest
 		} else {
 			e.generationsSinceChange++
+		}
+
+		if e.generation%10 == 0 {
+			e.printStats(startTime)
 		}
 
 		if e.generation%250 == 0 {

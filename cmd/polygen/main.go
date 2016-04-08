@@ -6,7 +6,6 @@ import (
 	"math/rand"
 	"os"
 	"time"
-	"image"
 	"log"
 )
 
@@ -52,7 +51,7 @@ func main() {
 	var previews []*polygen.SafeImage
 
 	totalImages := polygen.PopulationCount
-	placeholder := image.Rect(0, 0, 200, 200)
+	placeholder := refImg.Bounds()
 	for i := 0; i < totalImages; i++ {
 		img := &polygen.SafeImage{Image: placeholder}
 		previews = append(previews, img)
