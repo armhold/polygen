@@ -66,7 +66,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 	e.renderAndEvaluate(e.mostFit)
 
-	startTime := time.Now()
+	stats := NewStats()
 
 	// to synchronize workers
 	c := make(chan struct{})
@@ -95,6 +95,8 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			<-c
 		}
 
+		stats.Increment(PopulationCount-1)
+
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
 
@@ -103,6 +105,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		}
 
 		currBest := e.candidates[0]
+		worst := e.candidates[len(e.candidates)-1]
 
 		if currBest.Fitness < e.mostFit.Fitness {
 			e.generationsSinceChange = 0
@@ -112,7 +115,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		}
 
 		if e.generation%10 == 0 {
-			e.printStats(startTime)
+			stats.Print(currBest, worst, e.generation, e.generationsSinceChange)
 		}
 
 		if e.generation%250 == 0 {
@@ -195,12 +198,4 @@ func (e *Evolver) renderAndEvaluate(c *Candidate) {
 	}
 
 	c.Fitness = diff
-}
-
-func (e *Evolver) printStats(startTime time.Time) {
-	dur := time.Since(startTime)
-	best := e.candidates[0].Fitness
-	worst := e.candidates[len(e.candidates)-1].Fitness
-
-	log.Printf("dur: %s, gen: %d, since change: %d, best: %d, worst: %d", dur, e.generation, e.generationsSinceChange, best, worst)
 }
