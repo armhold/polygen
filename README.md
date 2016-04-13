@@ -58,3 +58,13 @@ Just point your browser to [http://localhost:8080](http://localhost:8080).
 This code is my own, but credit goes to Roger Johansson for the original idea,
 which he documented [here](http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa). 
 
+The file "mona_lisa.jpg" contains a low-resolution portion of the painting
+[Mona Lisa](https://en.wikipedia.org/wiki/Mona_Lisa), by Leonardo da Vinci. It is in the Public Domain.
+
+The file "starry.jpg" contains a low-resolution copy of the painting
+[The Stary Night](https://en.wikipedia.org/wiki/The_Starry_Night) by Vincent van Gogh. It is in the Public Domain.
+
+The file "Revolver.jpg" contains a low-resolution copy of the cover art for the album Revolver by the artist
+The Beatles. The cover art copyright is believed to belong to the label, Parlophone/EMI, or the graphic artist(s),
+Klaus Voormann. It is included under [Fair Use](https://en.wikipedia.org/wiki/Fair_use).
+
