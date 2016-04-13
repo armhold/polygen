@@ -230,9 +230,9 @@ func (cd *Candidate) renderImage() {
 	// paint the whole thing black to start
 	gc.SetFillColor(color.Black)
 	gc.MoveTo(0, 0)
-	gc.LineTo(float64(cd.W), 0)
-	gc.LineTo(float64(cd.W), float64(cd.H))
-	gc.LineTo(0, float64(cd.H))
+	gc.LineTo(float64(cd.W-1), 0)
+	gc.LineTo(float64(cd.W-1), float64(cd.H-1))
+	gc.LineTo(0, float64(cd.H-1))
 	gc.Close()
 	gc.Fill()
 
