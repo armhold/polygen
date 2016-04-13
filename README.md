@@ -38,8 +38,9 @@ create a population of offspring.
 
 ### Usage
 
-1. `$ go get github.com/llgcode/draw2d/draw2dimg`
-1. `go run cmd/polygen/main.go -source images/mona_lisa.jpg -poly 50`
+1. `$ go get github.com/armhold/polygen/...`
+1. `$ cd $GOPATH/src/github.com/armhold/polygen`
+1. `polygen -source images/mona_lisa.jpg -poly 50`
 1. Let it run until you are happy with the output (in `output.png`), or until you notice that there is not much change
 between generations.
 
