@@ -13,6 +13,12 @@ This one is 100 polygons:
 ![mona-lisa](https://github.com/armhold/polygen/blob/master/images/mona_lisa.jpg "mona lisa (orig)")
 ![mona-lisa 100 polygons](https://github.com/armhold/polygen/blob/master/images/mona_lisa-100-polygons.png "mona lisa (100 polygons)")
 
+
+500 polygons, 680850 generations:
+
+![revolver](https://github.com/armhold/polygen/blob/master/images/Revolver.jpg "revolver thumbnail(orig)")
+![revolver 500 polygons](https://github.com/armhold/polygen/blob/master/images/revolver-500-out.png "revolver thumbnail (500 polygons)")
+
 ###
 
 The algorithm is pretty simple:
