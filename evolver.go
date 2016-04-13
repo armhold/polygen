@@ -74,7 +74,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 	for ; e.generation < maxGen; e.generation++ {
 
 		processCandidate := func(cand *Candidate) {
-			for i := 0; i < 3; i++ {
+			for i := 0; i < MutationsPerIteration; i++ {
 				cand.mutateInPlace()
 			}
 

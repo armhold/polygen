@@ -55,18 +55,19 @@ func Compare(img1, img2 image.Image) (int64, error) {
 
 // FastCompare compares images by diffing the underlying byte arrays directly.
 // This is more than 10x faster than Compare(), but requires a concrete instance of image.RGBA.
-func FastCompare(img1, img2 *image.RGBA) (int64, error) {
+func FastCompare(img1, img2 *image.RGBA) (uint64, error) {
 	if img1.Bounds() != img2.Bounds() {
 		return 0, fmt.Errorf("image bounds not equal: %+v, %+v", img1.Bounds(), img2.Bounds())
 	}
 
-	accumError := int64(0)
+	accumError := uint64(0)
 
 	for i := 0; i < len(img1.Pix); i++ {
-		accumError += int64(sqDiffUInt8(img1.Pix[i], img2.Pix[i]))
+		accumError += uint64(diffUint8(img1.Pix[i], img2.Pix[i]))
 	}
 
-	return int64(math.Sqrt(float64(accumError))), nil
+	//return int64(math.Sqrt(float64(accumError))), nil
+	return accumError, nil
 }
 
 // from http://blog.golang.org/go-imagedraw-package ("Converting an Image to RGBA"),
@@ -101,10 +102,10 @@ func sqDiff(x, y uint32) uint32 {
 	return (d * d) >> 2
 }
 
-func sqDiffUInt8(x, y uint8) uint64 {
-	// NB: uint8 max is 255, and 255 * 255 == 65025, so we could fit the results
-	// into a uint16. However uint64 benched slightly faster, so we use that.
-
-	d := uint64(x) - uint64(y)
-	return d * d
+func diffUint8(x, y uint8) uint8 {
+	if x > y {
+		return x - y
+	} else {
+		return y - x
+	}
 }

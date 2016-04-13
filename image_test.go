@@ -63,14 +63,14 @@ func TestFastCompare(t *testing.T) {
 
 	// same img
 	diff, _ := FastCompare(img1, img1)
-	expected := int64(0)
+	expected := uint64(0)
 	if diff != expected {
 		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
 	}
 
 	diff, _ = FastCompare(img1, img2)
 	// arbitrary value that we came to by testing
-	expected = 500
+	expected = 50000
 	if diff != expected {
 		t.Fatalf("expected diff to be %d, got: %d", expected, diff)
 	}

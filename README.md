@@ -53,7 +53,7 @@ Just point your browser to [http://localhost:8080](http://localhost:8080).
 ###
 
 
-### Credit
+### Credits
 
 This code is my own, but credit goes to Roger Johansson for the original idea,
 which he documented [here](http://rogeralsing.com/2008/12/07/genetic-programming-evolution-of-mona-lisa). 

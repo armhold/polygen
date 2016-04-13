@@ -23,6 +23,7 @@ const (
 	MaxPolygonPoints         = 6
 	MinPolygonPoints         = 3
 	PointMutationMaxDistance = 5
+	MutationsPerIteration    = 1 // originally had 3, but 1 seems to work best here
 )
 
 var (
@@ -39,7 +40,7 @@ type Candidate struct {
 	W, H     int
 	Polygons []*Polygon
 	img      *image.RGBA
-	Fitness  int64
+	Fitness  uint64
 }
 
 // Polygon is a set of points with a given fill color.
@@ -148,6 +149,7 @@ func (p *Polygon) deleteRandomPoint() {
 	p.Points = append(p.Points[:i], p.Points[i+1:]...)
 }
 
+// MutateNearby alters the point by moving it a few pixels.
 func (p *Point) MutateNearby(maxW, maxH int) {
 	xDelta := rand.Intn(PointMutationMaxDistance + 1)
 	if NextBool() {
