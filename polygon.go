@@ -91,7 +91,7 @@ func randomPoint(maxW, maxH int) Point {
 	return Point{rand.Intn(maxW), rand.Intn(maxH)}
 }
 
-// does not copy image- we assume the copy will be mutated after
+// Copies the Candidate, minus the img (we assume the copy will be mutated/rendered after).
 func (c *Candidate) CopyOf() *Candidate {
 	result := &Candidate{W: c.W, H: c.H}
 	for i := 0; i < len(c.Polygons); i++ {
