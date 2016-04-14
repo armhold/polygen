@@ -3,18 +3,18 @@ package main
 import (
 	"flag"
 	"github.com/armhold/polygen"
+	"log"
 	"math/rand"
 	"os"
 	"time"
-	"log"
 )
 
 var (
-	maxGen int
-	polyCount int
+	maxGen     int
+	polyCount  int
 	srcImgFile string
 	dstImgFile string
-	cpFile string
+	cpFile     string
 	host, port string
 )
 
@@ -57,7 +57,7 @@ func main() {
 		previews = append(previews, img)
 	}
 
-	go polygen.Serve(host + ":" + port, refImg, previews)
+	go polygen.Serve(host+":"+port, refImg, previews)
 
 	evolver, err := polygen.NewEvolver(refImg, dstImgFile, cpFile)
 	if err != nil {

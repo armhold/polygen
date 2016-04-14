@@ -7,9 +7,9 @@ import (
 	"image"
 	"io/ioutil"
 	"log"
+	"os"
 	"sort"
 	"time"
-	"os"
 )
 
 // Evolver uses a genetic algorithm to evolve a set of polygons to approximate an image.
@@ -82,20 +82,18 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 			c <- struct{}{}
 		}
 
-
 		// mostFit is already in slot 0, so start at 1
 		for i := 1; i < PopulationCount; i++ {
 			e.candidates[i] = e.mostFit.CopyOf()
 			go processCandidate(e.candidates[i])
 		}
 
-
 		// wait for all processCandidate() calls to return
 		for i := 1; i < PopulationCount; i++ {
 			<-c
 		}
 
-		stats.Increment(PopulationCount-1)
+		stats.Increment(PopulationCount - 1)
 
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
