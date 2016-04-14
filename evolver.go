@@ -60,7 +60,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 	// no candidate from prev call to RestoreFromCheckpoint()
 	if e.mostFit == nil {
-		e.mostFit = RandomCandidate(w, h, polyCount)
+		e.mostFit = randomCandidate(w, h, polyCount)
 		e.candidates[0] = e.mostFit
 	}
 
@@ -84,7 +84,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 
 		// mostFit is already in slot 0, so start at 1
 		for i := 1; i < PopulationCount; i++ {
-			e.candidates[i] = e.mostFit.CopyOf()
+			e.candidates[i] = e.mostFit.copyOf()
 			go processCandidate(e.candidates[i])
 		}
 

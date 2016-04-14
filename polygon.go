@@ -54,7 +54,7 @@ type Point struct {
 	X, Y int
 }
 
-func (p *Polygon) Copy() *Polygon {
+func (p *Polygon) copyOf() *Polygon {
 	result := &Polygon{Color: p.Color}
 	for i := 0; i < len(p.Points); i++ {
 		result.Points = append(result.Points, p.Points[i])
@@ -63,7 +63,7 @@ func (p *Polygon) Copy() *Polygon {
 	return result
 }
 
-func RandomCandidate(w, h, polyCount int) *Candidate {
+func randomCandidate(w, h, polyCount int) *Candidate {
 	result := &Candidate{W: w, H: h}
 	for i := 0; i < polyCount; i++ {
 		result.Polygons = append(result.Polygons, randomPolygon(w, h))
@@ -92,10 +92,10 @@ func randomPoint(maxW, maxH int) Point {
 }
 
 // Copies the Candidate, minus the img (we assume the copy will be mutated/rendered after).
-func (c *Candidate) CopyOf() *Candidate {
+func (c *Candidate) copyOf() *Candidate {
 	result := &Candidate{W: c.W, H: c.H}
 	for i := 0; i < len(c.Polygons); i++ {
-		result.Polygons = append(result.Polygons, c.Polygons[i].Copy())
+		result.Polygons = append(result.Polygons, c.Polygons[i].copyOf())
 	}
 
 	return result
@@ -114,7 +114,7 @@ func (c *Candidate) mutateInPlace() {
 
 	case MutationPoint:
 		pi := rand.Intn(len(pgon.Points))
-		pgon.Points[pi].MutateNearby(c.W, c.H)
+		pgon.Points[pi].mutateNearby(c.W, c.H)
 
 	case MutationZOrder:
 		shufflePolygonZOrder(c.Polygons)
@@ -149,8 +149,8 @@ func (p *Polygon) deleteRandomPoint() {
 	p.Points = append(p.Points[:i], p.Points[i+1:]...)
 }
 
-// MutateNearby alters the point by moving it a few pixels.
-func (p *Point) MutateNearby(maxW, maxH int) {
+// mutateNearby alters the point by moving it a few pixels.
+func (p *Point) mutateNearby(maxW, maxH int) {
 	xDelta := rand.Intn(PointMutationMaxDistance + 1)
 	if NextBool() {
 		xDelta = -xDelta
