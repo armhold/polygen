@@ -128,7 +128,7 @@ func (c *Candidate) mutateInPlace() {
 			pgon.deleteRandomPoint()
 		} else {
 			// we can do either add or delete
-			if NextBool() {
+			if RandomBool() {
 				pgon.addPoint(randomPoint(c.W, c.H))
 			} else {
 				pgon.deleteRandomPoint()
@@ -152,7 +152,7 @@ func (p *Polygon) deleteRandomPoint() {
 // mutateNearby alters the point by moving it a few pixels.
 func (p *Point) mutateNearby(maxW, maxH int) {
 	xDelta := rand.Intn(PointMutationMaxDistance + 1)
-	if NextBool() {
+	if RandomBool() {
 		xDelta = -xDelta
 	}
 
@@ -167,7 +167,7 @@ func (p *Point) mutateNearby(maxW, maxH int) {
 	p.X = x
 
 	yDelta := rand.Intn(PointMutationMaxDistance + 1)
-	if NextBool() {
+	if RandomBool() {
 		yDelta = -yDelta
 	}
 

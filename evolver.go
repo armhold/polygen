@@ -123,11 +123,9 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 				log.Fatalf("error saving output image: %s", err)
 			}
 
-			if e.checkPointFile != "" {
-				err = e.saveCheckpoint()
-				if err != nil {
-					log.Fatalf("error saving checkpoint file: %s", err)
-				}
+			err = e.saveCheckpoint()
+			if err != nil {
+				log.Fatalf("error saving checkpoint file: %s", err)
 			}
 			dur := time.Since(cpSave)
 			log.Printf("checkpoint took %s", dur)
