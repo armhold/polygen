@@ -51,8 +51,6 @@ Just point your browser to [http://localhost:8080](http://localhost:8080).
 
 ![logo](https://github.com/armhold/polygen/blob/master/images/logo.gif "polygen Logo")
 
-###
-
 
 ### Credits
 
