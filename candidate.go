@@ -104,34 +104,34 @@ func (c *Candidate) copyOf() *Candidate {
 // mutateInPlace chooses a random polygon from the candidate and makes a random mutation to it.
 func (c *Candidate) mutateInPlace() {
 	locus := rand.Intn(len(c.Polygons))
-	pgon := c.Polygons[locus]
+	poly := c.Polygons[locus]
 	switch randomMutation() {
 	case MutationColor:
-		pgon.Color = mutateColor(pgon.Color)
+		poly.Color = mutateColor(poly.Color)
 
 	case MutationAlpha:
-		pgon.Color = mutateAlpha(pgon.Color)
+		poly.Color = mutateAlpha(poly.Color)
 
 	case MutationPoint:
-		pi := rand.Intn(len(pgon.Points))
-		pgon.Points[pi].mutateNearby(c.W, c.H)
+		pointIndex := rand.Intn(len(poly.Points))
+		poly.Points[pointIndex].mutateNearby(c.W, c.H)
 
 	case MutationZOrder:
 		shufflePolygonZOrder(c.Polygons)
 
 	case MutationAddOrDeletePoint:
-		if len(pgon.Points) == MinPolygonPoints {
+		if len(poly.Points) == MinPolygonPoints {
 			// can't delete
-			pgon.addPoint(randomPoint(c.W, c.H))
-		} else if len(pgon.Points) == MaxPolygonPoints {
+			poly.addPoint(randomPoint(c.W, c.H))
+		} else if len(poly.Points) == MaxPolygonPoints {
 			// can't add
-			pgon.deleteRandomPoint()
+			poly.deleteRandomPoint()
 		} else {
 			// we can do either add or delete
 			if RandomBool() {
-				pgon.addPoint(randomPoint(c.W, c.H))
+				poly.addPoint(randomPoint(c.W, c.H))
 			} else {
-				pgon.deleteRandomPoint()
+				poly.deleteRandomPoint()
 			}
 		}
 
