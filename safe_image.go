@@ -6,6 +6,7 @@ import (
 )
 
 // SafeImage is an image protected by a RWMutex. All access should be via the Update() and Value() methods.
+// This allows us to update the candidate images from the Evolver, and display them in the Server.
 type SafeImage struct {
 	Image image.Image
 	mux   sync.RWMutex
