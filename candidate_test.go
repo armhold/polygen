@@ -1,8 +1,8 @@
 package polygen
 
 import (
-	"testing"
 	"reflect"
+	"testing"
 )
 
 func BenchmarkMutateInPlace(b *testing.B) {
@@ -30,7 +30,7 @@ func TestCopy(t *testing.T) {
 
 	c2 := c1.copyOf()
 
-	if ! reflect.DeepEqual(c1, c2) {
+	if !reflect.DeepEqual(c1, c2) {
 		t.Fatalf("c1 != c2: %+v, %+v", c1, c2)
 	}
 }
