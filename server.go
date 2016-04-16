@@ -74,7 +74,13 @@ func refImageHandler(referenceImg image.Image) http.HandlerFunc {
 
 func serveNonCacheableImage(img image.Image, w http.ResponseWriter, r *http.Request) {
 	buffer := new(bytes.Buffer)
-	if err := png.Encode(buffer, img); err != nil {
+
+	// serve images without compression- this results in a 5-10x speedup, and helps get more CPU
+	// to the evolver. If you're actually serving images over the network (vs just localhost),
+	// you might want to change this to png.DefaultCompression.
+	encoder := png.Encoder{CompressionLevel: png.NoCompression}
+
+	if err := encoder.Encode(buffer, img); err != nil {
 		s := fmt.Sprintf("unable to encode image: %s", err)
 		log.Print(s)
 		http.Error(w, s, http.StatusInternalServerError)
