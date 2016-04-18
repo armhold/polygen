@@ -39,7 +39,7 @@ func init() {
 type Candidate struct {
 	W, H     int
 	Polygons []*Polygon
-	img      *image.RGBA
+	img      *image.RGBA   // candidate this image for evaluation
 	Fitness  uint64
 }
 
@@ -68,8 +68,6 @@ func randomCandidate(w, h, polyCount int) *Candidate {
 	for i := 0; i < polyCount; i++ {
 		result.Polygons = append(result.Polygons, randomPolygon(w, h))
 	}
-
-	result.renderImage()
 
 	return result
 }
@@ -105,6 +103,7 @@ func (c *Candidate) copyOf() *Candidate {
 func (c *Candidate) mutateInPlace() {
 	locus := rand.Intn(len(c.Polygons))
 	poly := c.Polygons[locus]
+
 	switch randomMutation() {
 	case MutationColor:
 		poly.Color = mutateColor(poly.Color)
@@ -269,6 +268,8 @@ func shufflePolygonZOrder(polygons []*Polygon) {
 	}
 }
 
+
+// sorting
 type ByFitness []*Candidate
 
 func (cds ByFitness) Len() int           { return len(cds) }
