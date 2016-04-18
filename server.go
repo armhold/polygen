@@ -17,7 +17,18 @@ var (
 )
 
 func init() {
-	templates = template.Must(template.ParseGlob("templates/*.html"))
+	// use https://github.com/jteeuwen/go-bindata to re-construct templates/index.html.
+	// This is done so that the polygen executable can be installed anywhere, and not have
+	// to depend on an external asset like templates/index.html.
+	data, err := Asset("templates/index.html")
+	if err != nil {
+		log.Fatalf("unable to read templates/index.html from bindata: %s", err)
+	}
+
+	templates, err = template.New("templates").New("index.html").Parse(string(data))
+	if err != nil {
+		log.Fatalf("error parsing bindata for templates/index.html: %s", err)
+	}
 }
 
 type Page struct {
