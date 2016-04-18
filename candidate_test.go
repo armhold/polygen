@@ -37,7 +37,7 @@ func TestCandidateCopyOf(t *testing.T) {
 
 // check that copyOf() actually copies the polygon's points (vs just copying their pointers). Had a mutability bug here.
 func TestPolygonCopyOf(t *testing.T) {
-	p1:= randomPolygon(100, 100)
+	p1 := randomPolygon(100, 100)
 	p2 := p1.copyOf()
 
 	// initially, they should be equal

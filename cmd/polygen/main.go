@@ -2,11 +2,12 @@ package main
 
 import (
 	"flag"
-	"github.com/armhold/polygen"
 	"log"
 	"math/rand"
 	"os"
 	"time"
+
+	"github.com/armhold/polygen"
 )
 
 var (
@@ -53,7 +54,7 @@ func main() {
 	totalImages := polygen.PopulationCount
 	placeholder := refImg.Bounds()
 	for i := 0; i < totalImages; i++ {
-		img := &polygen.SafeImage{Image: placeholder}
+		img := polygen.NewSafeImage(placeholder)
 		previews = append(previews, img)
 	}
 

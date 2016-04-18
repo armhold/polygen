@@ -39,7 +39,7 @@ func init() {
 type Candidate struct {
 	W, H     int
 	Polygons []*Polygon
-	img      *image.RGBA   // candidate this image for evaluation
+	img      *image.RGBA // candidate this image for evaluation
 	Fitness  uint64
 }
 
@@ -267,7 +267,6 @@ func shufflePolygonZOrder(polygons []*Polygon) {
 		polygons[i], polygons[j] = polygons[j], polygons[i]
 	}
 }
-
 
 // sorting
 type ByFitness []*Candidate
