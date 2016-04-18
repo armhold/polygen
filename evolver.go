@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"golang.org/x/exp/shiny/screen"
 	"image"
 	"io/ioutil"
 	"log"
@@ -31,6 +32,10 @@ type Checkpoint struct {
 	MostFit                *Candidate
 }
 
+type UploadEvent struct {
+	Image image.Image
+}
+
 func NewEvolver(refImg image.Image, dstImageFile string, checkPointFile string) (*Evolver, error) {
 	result := &Evolver{
 		dstImgFile:     dstImageFile,
@@ -54,7 +59,7 @@ func NewEvolver(refImg image.Image, dstImageFile string, checkPointFile string) 
 // Run runs the Evolver until maxGen generations have been evaluated.
 // At each generation, the candidate images are rendered & evaluated, and the preview images are
 // updated to reflect the current state.
-func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
+func (e *Evolver) Run(maxGen, polyCount int, eventQueue screen.EventQueue) {
 	w := e.refImgRGBA.Bounds().Dx()
 	h := e.refImgRGBA.Bounds().Dy()
 
@@ -98,9 +103,9 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		// after sort, the best will be at [0], worst will be at [len() - 1]
 		sort.Sort(ByFitness(e.candidates))
 
-		for i := 0; i < len(previews); i++ {
-			previews[i].Update(e.candidates[i].img)
-		}
+		//for i := 0; i < len(previews); i++ {
+		//	previews[i].Update(e.candidates[i].img)
+		//}
 
 		currBest := e.candidates[0]
 		worst := e.candidates[len(e.candidates)-1]
@@ -108,6 +113,7 @@ func (e *Evolver) Run(maxGen, polyCount int, previews []*SafeImage) {
 		if currBest.Fitness < e.mostFit.Fitness {
 			e.generationsSinceChange = 0
 			e.mostFit = currBest
+			eventQueue.Send(UploadEvent{Image: e.mostFit.img})
 		} else {
 			e.generationsSinceChange++
 		}
