@@ -69,7 +69,8 @@ func main() {
 		}
 		defer w.Release()
 
-		winSize := image.Point{256, 256}
+		// TODO: actual window size does not seem to use this
+		winSize := image.Point{refImg.Bounds().Dx() * 2, refImg.Bounds().Dy() * 2}
 		b, err := s.NewBuffer(winSize)
 		if err != nil {
 			log.Fatal(err)
@@ -84,6 +85,13 @@ func main() {
 		t.Upload(image.Point{}, b, b.Bounds())
 
 		go evolver.Run(maxGen, polyCount, w)
+
+
+		log.Printf("refImage bounds: %v\n", refImg.Bounds())
+		log.Printf("winSize        : %v\n", winSize)
+
+		// draw the refImg
+		drawImage(b.RGBA(), b.Bounds(), refImg)
 
 		var sz size.Event
 		for {
@@ -102,7 +110,11 @@ func main() {
 
 			case polygen.UploadEvent:
 				uploadEvent := polygen.UploadEvent(e)
-				drawImage(b.RGBA(), uploadEvent.Image)
+
+				// offset next to the refImg, then paint the candidate
+				bounds := b.Bounds()
+				r := image.Rect(bounds.Min.X + refImg.Bounds().Dx(), bounds.Min.Y, bounds.Max.X, bounds.Max.Y)
+				drawImage(b.RGBA(), r, uploadEvent.Image)
 				doPaint(w, b, sz)
 
 			case paint.Event:
@@ -126,7 +138,6 @@ func doPaint(w screen.Window, b screen.Buffer, sz size.Event) {
 	w.Publish()
 }
 
-func drawImage(dest *image.RGBA, img image.Image) {
-	bounds := dest.Bounds()
-	draw.Draw(dest, dest.Bounds(), img, bounds.Min, draw.Src)
+func drawImage(dest *image.RGBA, dr image.Rectangle, img image.Image) {
+	draw.Draw(dest, dr, img, img.Bounds().Min, draw.Src)
 }
