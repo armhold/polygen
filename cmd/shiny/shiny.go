@@ -25,7 +25,6 @@ var (
 	srcImgFile string
 	dstImgFile string
 	cpFile     string
-	host, port string
 )
 
 func init() {
@@ -34,21 +33,12 @@ func init() {
 	flag.StringVar(&srcImgFile, "source", "images/mona_lisa.jpg", "the source input image file")
 	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
 	flag.StringVar(&cpFile, "cp", "checkpoint.tmp", "checkpoint file")
-	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
-	flag.StringVar(&port, "port", "8080", "which port to http listen on")
 
 	flag.Parse()
 
 	if srcImgFile == "" || dstImgFile == "" {
 		flag.Usage()
 		os.Exit(1)
-	}
-
-	if port == "" {
-		port = "8080"
-	}
-	if host == "" {
-		host = "localhost"
 	}
 
 	rand.Seed(time.Now().UTC().UnixNano())
@@ -63,6 +53,7 @@ func main() {
 	}
 
 	driver.Main(func(s screen.Screen) {
+		// double-width: we will display the refImg and the best candidate side-by-side
 		winSize := image.Point{refImg.Bounds().Dx() * 2, refImg.Bounds().Dy()}
 		w, err := s.NewWindow(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y})
 		if err != nil {
@@ -84,9 +75,9 @@ func main() {
 		t.Upload(image.Point{}, b, b.Bounds())
 
 		// draw the refImg
-		drawImage(b.RGBA(), b.Bounds(), refImg)
+		draw.Draw(b.RGBA(), b.Bounds(), refImg, refImg.Bounds().Min, draw.Src)
 
-		// start the evolver
+		// start the evolver; it will send paint events to the Window when best candidate has changed
 		go evolver.Run(maxGen, polyCount, w)
 
 		log.Printf("refImage bounds: %v\n", refImg.Bounds())
@@ -107,13 +98,14 @@ func main() {
 					return
 				}
 
-			case polygen.UploadEvent:
-				uploadEvent := polygen.UploadEvent(e)
+			case polygen.CandidateChangedEvent:
+				ccEvent := polygen.CandidateChangedEvent(e)
+				img := ccEvent.Image
 
 				// offset next to the refImg, then paint the candidate
 				bounds := b.Bounds()
 				r := image.Rect(bounds.Min.X+refImg.Bounds().Dx(), bounds.Min.Y, bounds.Max.X, bounds.Max.Y)
-				drawImage(b.RGBA(), r, uploadEvent.Image)
+				draw.Draw(b.RGBA(), r, img, img.Bounds().Min, draw.Src)
 				doPaint(w, b, sz)
 
 			case paint.Event:
@@ -135,8 +127,4 @@ func doPaint(w screen.Window, b screen.Buffer, sz size.Event) {
 	w.Fill(sz.Bounds(), color.Black, screen.Src)
 	w.Upload(image.Point{}, b, b.Bounds())
 	w.Publish()
-}
-
-func drawImage(dest *image.RGBA, dr image.Rectangle, img image.Image) {
-	draw.Draw(dest, dr, img, img.Bounds().Min, draw.Src)
 }

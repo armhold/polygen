@@ -32,7 +32,9 @@ type Checkpoint struct {
 	MostFit                *Candidate
 }
 
-type UploadEvent struct {
+// CandidateChangedEvent signals to shiny that the candidate image has changed, and the
+// window should be repainted to display the new image.
+type CandidateChangedEvent struct {
 	Image image.Image
 }
 
@@ -113,7 +115,7 @@ func (e *Evolver) Run(maxGen, polyCount int, eventQueue screen.EventQueue) {
 		if currBest.Fitness < e.mostFit.Fitness {
 			e.generationsSinceChange = 0
 			e.mostFit = currBest
-			eventQueue.Send(UploadEvent{Image: e.mostFit.img})
+			eventQueue.Send(CandidateChangedEvent{Image: e.mostFit.img})
 		} else {
 			e.generationsSinceChange++
 		}
