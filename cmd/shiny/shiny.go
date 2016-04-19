@@ -63,14 +63,13 @@ func main() {
 	}
 
 	driver.Main(func(s screen.Screen) {
-		w, err := s.NewWindow(nil)
+		winSize := image.Point{refImg.Bounds().Dx() * 2, refImg.Bounds().Dy()}
+		w, err := s.NewWindow(&screen.NewWindowOptions{Width: winSize.X, Height: winSize.Y})
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer w.Release()
 
-		// TODO: actual window size does not seem to use this
-		winSize := image.Point{refImg.Bounds().Dx() * 2, refImg.Bounds().Dy() * 2}
 		b, err := s.NewBuffer(winSize)
 		if err != nil {
 			log.Fatal(err)
@@ -84,14 +83,14 @@ func main() {
 		defer t.Release()
 		t.Upload(image.Point{}, b, b.Bounds())
 
-		go evolver.Run(maxGen, polyCount, w)
+		// draw the refImg
+		drawImage(b.RGBA(), b.Bounds(), refImg)
 
+		// start the evolver
+		go evolver.Run(maxGen, polyCount, w)
 
 		log.Printf("refImage bounds: %v\n", refImg.Bounds())
 		log.Printf("winSize        : %v\n", winSize)
-
-		// draw the refImg
-		drawImage(b.RGBA(), b.Bounds(), refImg)
 
 		var sz size.Event
 		for {
@@ -113,7 +112,7 @@ func main() {
 
 				// offset next to the refImg, then paint the candidate
 				bounds := b.Bounds()
-				r := image.Rect(bounds.Min.X + refImg.Bounds().Dx(), bounds.Min.Y, bounds.Max.X, bounds.Max.Y)
+				r := image.Rect(bounds.Min.X+refImg.Bounds().Dx(), bounds.Min.Y, bounds.Max.X, bounds.Max.Y)
 				drawImage(b.RGBA(), r, uploadEvent.Image)
 				doPaint(w, b, sz)
 
