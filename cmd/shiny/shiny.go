@@ -24,7 +24,7 @@ var (
 	polyCount  int
 	srcImgFile string
 	dstImgFile string
-	cpFile     string
+	cpArg string
 )
 
 func init() {
@@ -32,7 +32,7 @@ func init() {
 	flag.IntVar(&polyCount, "poly", 50, "the number of polygons")
 	flag.StringVar(&srcImgFile, "source", "images/mona_lisa.jpg", "the source input image file")
 	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
-	flag.StringVar(&cpFile, "cp", "checkpoint.tmp", "checkpoint file")
+	flag.StringVar(&cpArg, "cp", "", "checkpoint file")
 
 	flag.Parse()
 
@@ -47,7 +47,9 @@ func init() {
 func main() {
 	refImg := polygen.MustReadImage(srcImgFile)
 
-	evolver, err := polygen.NewEvolver(refImg, dstImgFile, cpFile)
+	cp := polygen.DeriveCheckpointFile(srcImgFile, cpArg, polyCount)
+
+	evolver, err := polygen.NewEvolver(refImg, dstImgFile, cp)
 	if err != nil {
 		log.Fatal(err)
 	}
