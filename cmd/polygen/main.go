@@ -15,16 +15,17 @@ var (
 	polyCount  int
 	srcImgFile string
 	dstImgFile string
-	cpFile     string
+	cpArg string
 	host, port string
 )
+
 
 func init() {
 	flag.IntVar(&maxGen, "max", 100000, "the number of generations")
 	flag.IntVar(&polyCount, "poly", 50, "the number of polygons")
-	flag.StringVar(&srcImgFile, "source", "", "the source input image file")
+	flag.StringVar(&srcImgFile, "source", "images/mona_lisa.jpg", "the source input image file")
 	flag.StringVar(&dstImgFile, "dest", "output.png", "the output image file")
-	flag.StringVar(&cpFile, "cp", "checkpoint.tmp", "checkpoint file")
+	flag.StringVar(&cpArg, "cp", "", "checkpoint file")
 	flag.StringVar(&host, "host", "localhost", "which hostname to http listen on")
 	flag.StringVar(&port, "port", "8080", "which port to http listen on")
 
@@ -60,10 +61,13 @@ func main() {
 
 	go polygen.Serve(host+":"+port, refImg, previews)
 
-	evolver, err := polygen.NewEvolver(refImg, dstImgFile, cpFile)
+	cp := polygen.DeriveCheckpointFile(srcImgFile, cpArg, polyCount)
+
+	evolver, err := polygen.NewEvolver(refImg, dstImgFile, cp)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	evolver.Run(maxGen, polyCount, previews)
 }
+
