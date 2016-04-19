@@ -71,6 +71,12 @@ func (e *Evolver) Run(maxGen, polyCount int, eventQueue screen.EventQueue) {
 		e.candidates[0] = e.mostFit
 	}
 
+	// TODO: probably move the polyCount arg to NewEvolver(). It makes more sense to check there,
+	// and complain about the checkpoint file by name, which we do not have here.
+	if len(e.mostFit.Polygons) != polyCount {
+		log.Fatalf("checkpoint file polygon count mismatch: %d != %d", len(e.mostFit.Polygons), polyCount)
+	}
+
 	e.renderAndEvaluate(e.mostFit)
 
 	stats := NewStats()
@@ -168,7 +174,7 @@ func (e *Evolver) restoreFromCheckpoint() error {
 }
 
 func (e *Evolver) saveCheckpoint() error {
-	log.Printf("checkpointing to %s...", e.checkPointFile)
+	log.Printf("checkpointing to %s", e.checkPointFile)
 
 	buf := new(bytes.Buffer)
 	encoder := gob.NewEncoder(buf)
